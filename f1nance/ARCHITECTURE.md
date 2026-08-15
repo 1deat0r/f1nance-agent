@@ -91,9 +91,12 @@ every task, in every domain:
   (`SOUL.md`) and installed skills that Hermes actually loads. It is derived
   from `f1nance/`, not the other way around.
 
-Later phases move more of the agent's evolution loop into `f1nance/` (a
-store-first memory/decision substrate like the 3V0 Agent's `3v0/`), so that
-so that the profile remains a derived view and the repo remains the body.
+Phase 5 delivered both halves of that move: `f1nance/desk/` (the multi-agent
+coordination layer — five seats, one verdict, executor-injected so the
+coordination logic is Hermes-free) and `f1nance/core/` (the store-first
+memory/decision substrate, modeled on the 3V0 Agent's `3v0/`: an append-only
+provenance store plus a projector that renders the active facts into a
+derived view). The profile remains a derived view; the repo remains the body.
 
 **End state.** F1NANCE becomes its own agent, separate from Hermes Agent:
 its own runtime, tool registry, and memory/decision substrate, with no

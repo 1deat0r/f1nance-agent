@@ -76,12 +76,23 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
 - 64 offline unit tests added (204 total, all green); `order`/`impact`/
   `ledger`/`export` CLI with JSON output.
 
-## Phase 5 — The desk (multi-agent)
+## Phase 5 — The desk (multi-agent) ✅
 
-- Spawn specialized subagents per domain (a virtual desk: PM, trader, quant,
-  banker, CFO) coordinated by the umbrella harness.
-- Store-first evolution loop in `f1nance/` (memory + decisions as append-only
-  provenance), so the profile stays a derived view and the repo stays the body.
+- `f1nance/desk/` — the multi-agent coordination layer, stdlib-only: a
+  five-seat roster (PM, trader, quant, banker, CFO) over the six capability
+  domains, deterministic routing, and a coordinator that folds each seat's
+  `Finding` (thesis + stance + confidence + loss case + falsification) into a
+  single `Verdict` with consensus/dissent surfaced and every loss case
+  preserved. A seat's judgment is produced by an injectable `executor` — in
+  tests and the offline CLI it is scripted, in a live runtime it is a model
+  call or a delegated subagent; the coordination logic is Hermes-free.
+- `f1nance/core/` — the store-first evolution loop, stdlib-only: an
+  append-only, provenance-aware memory/decision store (supersede/retract,
+  never overwrite) plus a projector that renders the active facts into a
+  derived view. The repo stays the body; the Hermes profile stays a derived
+  projection.
+- 58 offline unit tests added (262 total, all green); `seats`/`route`/`run`
+  and `record`/`retract`/`export`/`history`/`render` CLIs with JSON output.
 
 ## Phase 6 — Independence (leave the chassis)
 
