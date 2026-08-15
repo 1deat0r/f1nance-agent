@@ -94,13 +94,28 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
 - 58 offline unit tests added (262 total, all green); `seats`/`route`/`run`
   and `record`/`retract`/`export`/`history`/`render` CLIs with JSON output.
 
-## Phase 6 — Independence (leave the chassis)
+## Phase 6 — Independence (leave the chassis) ✅
 
-- F1NANCE becomes its own standalone agent, separate from Hermes Agent: own
-  runtime/entry point, own tool registry, own memory and decision substrate.
-- The Hermes profile is retired; the body (`f1nance/`) runs on its own.
-- Exit criteria: zero Hermes-only coupling in the native core, all finance
-  capabilities running on the standalone substrate, tests green on both.
+- `f1nance/agent/` — the standalone runtime, stdlib-only, no Hermes imports:
+  - `client` — `AgentClient`, an OpenAI-compatible chat-completions client
+    with tool calling over stdlib `urllib` (reuses the desk's `ModelError`
+    and DeepSeek defaults).
+  - `tools` — the `Tool`/`ToolRegistry` and the built-in toolset: 18 tools
+    over the six engines (data, portfolio, quant, execution, desk) plus the
+    provenance store, each with a JSON schema and an engine-backed handler;
+    a failing tool returns an honest `{"error": ...}` rather than crashing.
+  - `system` — the system-prompt builder (SOUL + active store facts + the
+    working contract).
+  - `loop` — the `Agent` tool-calling loop (model → tool calls → results →
+    answer), bounded by a step cap that raises rather than inventing.
+  - `__main__` — the entry point: `python -m f1nance.agent` (interactive
+    REPL), `chat -q "…"` (one-shot), `--list-tools`, `--system`.
+- The Hermes profile is now a bootstrap fallback; the body (`f1nance/`) runs
+  on its own via `python -m f1nance.agent`. Retiring the profile entirely is
+  1deat0r's switch to throw, not a code deliverable.
+- Exit criteria met: zero Hermes-only coupling in the native core (only
+  docstring mentions — no imports), all six capability domains running on the
+  standalone substrate, and 329 offline tests green on both.
 
 ## Principles that survive every phase
 

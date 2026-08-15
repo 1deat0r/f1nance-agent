@@ -8,10 +8,10 @@ Phase-2 portfolio & risk engine (positions, risk metrics, attribution); the
 factor models, walk-forward backtesting); the ``execution`` subpackage is the
 Phase-4 execution & compliance layer (orders, transaction costs, and the
 append-only trade log); the ``desk`` subpackage is the Phase-5 multi-agent
-coordination layer (five seats, one verdict, executor-injected); and the
-``core`` subpackage is the Phase-5 store-first evolution loop
-(provenance-aware memory/decision store). More capability lands here as the
-roadmap advances toward Hermes-independence (see ROADMAP.md → Phase 6).
+coordination layer (five seats, one verdict, executor-injected); the ``core``
+subpackage is the Phase-5 store-first evolution loop (provenance-aware
+memory/decision store); and the ``agent`` subpackage is the Phase-6 standalone
+runtime (own entry point, tool registry, and memory substrate — no Hermes).
 """
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"

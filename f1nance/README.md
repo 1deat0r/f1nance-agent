@@ -23,11 +23,13 @@ This is a **hardfork**, not a wrapper:
 - `origin` tracks upstream `NousResearch/hermes-agent` (rebased to stay current).
 - `fork` is `1deat0r/f1nance-agent` — the diverging lineage.
 - `f1nance/` is F1NANCE's **native core**: identity, harness architecture,
-  skills, and roadmap. This directory is the agent, distinct from the Hermes
-  runtime it runs on.
-- The Hermes runtime (`~/.hermes/hermes-agent`) is the chassis. F1NANCE runs
-  as a Hermes **profile** (`~/.hermes/profiles/f1nance/`) whose `SOUL.md` and
-  skills are projections of this repo's `f1nance/` directory.
+  skills, roadmap, and — since Phase 6 — the standalone runtime
+  (`f1nance/agent/`). This directory is the agent, distinct from the Hermes
+  runtime it bootstrapped on.
+- The Hermes runtime (`~/.hermes/hermes-agent`) is the bootstrap chassis.
+  F1NANCE ran as a Hermes **profile** (`~/.hermes/profiles/f1nance/`) whose
+  `SOUL.md` and skills are projections of this repo's `f1nance/` directory;
+  since Phase 6 the body runs on its own (`python -m f1nance.agent`).
 
 ## Layout
 
@@ -38,7 +40,7 @@ f1nance/
 ├── ARCHITECTURE.md   # the harness: role taxonomy → capabilities → tools → guardrails
 ├── ROADMAP.md        # phased build plan
 ├── HANDOFF.md        # session-state — read first on wake, then verify against git
-├── VERSION           # 0.06
+├── VERSION           # 0.07
 ├── __init__.py       # native core package root
 ├── data/             # Phase-1 fetch/cache layer (stdlib-first; yfinance optional)
 ├── portfolio/        # Phase-2 portfolio & risk engine (stdlib-only)
@@ -46,6 +48,7 @@ f1nance/
 ├── execution/        # Phase-4 execution & compliance layer (stdlib-only)
 ├── desk/             # Phase-5 multi-agent coordination layer (stdlib-only)
 ├── core/             # Phase-5 store-first evolution loop (stdlib-only)
+├── agent/            # Phase-6 standalone runtime (entry point, tools, memory)
 ├── tests/            # offline unit tests (unittest; no Hermes, no network)
 └── skills/           # canonical finance skills (SKILL.md each), installed into the profile
     ├── f1nance/                        # umbrella: the harness operating manual
@@ -72,6 +75,27 @@ cp -r f1nance/skills/* ~/.hermes/profiles/f1nance/skills/
 hermes --profile f1nance          # interactive
 hermes --profile f1nance chat -q "…"   # one-shot
 ```
+
+## Standalone (no Hermes) — Phase 6
+
+The body runs on its own substrate — no Hermes, stdlib-only:
+
+```bash
+cd "/home/mustbearn/Projects/AI Agents/F1NANCE Agent"
+
+# one-shot
+f1nance/.venv/bin/python -m f1nance.agent chat -q "value a 60/40 AAPL/TLT portfolio"
+
+# interactive REPL
+f1nance/.venv/bin/python -m f1nance.agent
+
+# introspect (offline)
+f1nance/.venv/bin/python -m f1nance.agent --list-tools
+f1nance/.venv/bin/python -m f1nance.agent --system
+```
+
+Live runs need `F1NANCE_API_KEY` (or `DEEPSEEK_API_KEY`) in the environment.
+See `f1nance/agent/README.md`.
 
 ## Staying current with upstream
 

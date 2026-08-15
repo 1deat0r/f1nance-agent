@@ -12,10 +12,11 @@ Markets & Trading, Investment Banking, Asset Management, Quantitative — servin
 12 finance roles. The Operator is **1deat0r** (also **The 1deat0r**); address
 them only by those names.
 
-**Trajectory (explicit directive from 1deat0r):** F1NANCE becomes its own
-standalone agent, **separate from Hermes**. Hermes is the bootstrap chassis,
-not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
-`**End state**`, `ROADMAP.md` → `Phase 6`.
+**Trajectory (explicit directive from 1deat0r):** F1NANCE is its own
+standalone agent, **separate from Hermes**. Hermes was the bootstrap chassis.
+Phase 6 delivered the standalone runtime; the body (`f1nance/`) now runs on
+its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**`,
+`ROADMAP.md` → `Phase 6`.
 
 ## Where things live
 
@@ -24,53 +25,39 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   - `fork` → `1deat0r/f1nance-agent` (**public** on GitHub)
   - native core: `f1nance/` (SOUL, README, ARCHITECTURE, ROADMAP, HANDOFF,
     VERSION, skills/, data/ substrate, tests/)
-- **Runtime profile:** `~/.hermes/profiles/f1nance/` (DeepSeek-v4-pro, TUI)
-  - `SOUL.md` + `skills/` are a **projection of `f1nance/`** — the repo is
-    canonical, the profile is derived
-  - `f1nance_body_path` pointer → the repo
+- **Standalone runtime:** `f1nance/agent/` — own entry point (`python -m
+  f1nance.agent`), tool registry, and memory substrate. No Hermes imports.
+- **Runtime profile (bootstrap fallback):** `~/.hermes/profiles/f1nance/`
+  (DeepSeek-v4-pro). Its `SOUL.md` + `skills/` are a **projection of
+  `f1nance/`** — the repo is canonical, the profile is derived. Retiring it is
+  1deat0r's switch to throw now that Phase 6 runs standalone.
 
 ## Current state (verified this session)
 
-- **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅, Phase 5 ✅.** Phase 1 shipped the `f1nance/data/`
-  fetch/cache layer (see `f1nance/data/README.md`): stdlib-first (stooq, FRED,
-  EDGAR), yfinance optional in its own `f1nance/.venv/` (Python 3.11),
-  as-of/source/degraded provenance on every result, graceful degradation, no
-  fabrication. Phase 2 shipped the `f1nance/portfolio/` engine (see
-  `f1nance/portfolio/README.md`): stdlib-only positions (weights, exposure,
-  FX, cash drag, rebalance), risk (vol, Sharpe/Sortino, VaR/CVaR, beta,
-  drawdown, concentration), and Brinson-Fachler attribution. Phase 3 shipped
-  the `f1nance/quant/` engine (see `f1nance/quant/README.md`): stdlib-only
-  OLS/ridge regression, CAPM and multi-factor exposure models, cross-sectional
-  factor construction, and a walk-forward backtesting harness with explicit
-  costs, structural look-ahead guards, and honest in-sample/out-of-sample
-  reporting. Phase 4 shipped the `f1nance/execution/` engine (see
-  `f1nance/execution/README.md`): stdlib-only orders (market/limit/stop/
-  stop-limit, with validation plus marketability and stop-side assessment),
-  slippage & market impact (half-spread + square-root impact + fees), and an
-  append-only compliance trade log that mirrors every decision with its
-  rationale, confidence, and loss case — rejections recorded, never dropped.
-  Phase 5 shipped the `f1nance/desk/` engine (see `f1nance/desk/README.md`):
-  stdlib-only multi-agent coordination — a five-seat roster (PM, trader,
-  quant, banker, CFO) over the six capability domains, deterministic routing,
-  and an executor-injected coordinator that folds each seat's thesis + stance
-  + confidence + loss case into one verdict (dissent surfaced, every loss
-  case preserved). And the `f1nance/core/` engine (see
-  `f1nance/core/README.md`): an append-only provenance-aware memory/decision
-  store (supersede/retract, never overwrite) with a projector that renders
-  the active facts into a derived view — the repo is the body, the profile is
-  the projection.
-- **Desk live executor wired** (`f1nance/desk/live.py`): the `Executor` seam
-  is now backed by a Hermes-free model call (`ModelClient` over stdlib
-  `urllib`, DeepSeek by default) — `build_prompt` / `parse_finding` /
-  `model_executor` / `env_client` — with a `live` CLI command and a
-  bounded-retry parser that raises rather than fabricates a finding.
-  Live-verified against the real DeepSeek endpoint (two-seat trim brief →
-  `neutral` @ 0.7; no-fabrication guardrail visibly respected in the output).
-- **287 offline unit tests** (`f1nance/tests/`; 29 Phase-1 + 62 Phase-2 + 49
-  Phase-3 + 64 Phase-4 + 58 Phase-5 + 25 desk-live), all green:
+- **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅, Phase 5 ✅,
+  Phase 6 ✅.** Phase 6 shipped the `f1nance/agent/` standalone runtime (see
+  `f1nance/agent/README.md`): stdlib-only, no Hermes imports —
+  - `client` — `AgentClient`, an OpenAI-compatible chat-completions client
+    with tool calling over stdlib `urllib` (reuses the desk's `ModelError`
+    and DeepSeek defaults; strips `reasoning_content` on echo-back).
+  - `tools` — `Tool`/`ToolRegistry` + 18 engine-backed tools over the six
+    domains plus the provenance store; a failing tool returns an honest
+    `{"error": ...}` rather than crashing the loop.
+  - `system` — the system-prompt builder (SOUL + active store facts + the
+    working contract).
+  - `loop` — the `Agent` tool-calling loop, bounded by a step cap that raises
+    rather than inventing.
+  - `__main__` — entry point: interactive REPL, `chat -q "…"`, `--list-tools`,
+    `--system`.
+- **329 offline unit tests** (`f1nance/tests/`; 287 pre-Phase-6 + 42 new in
+  `test_agent.py`), all green:
   `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
-- **Live-verified** against yfinance (AAPL), FRED (CPIAUCSL), and SEC EDGAR
-  (Apple CIK 320193 → 505 XBRL tags). Cache hit / as-of / degraded confirmed.
+- **Desk live executor** (Phase 5) live-verified against the real DeepSeek
+  endpoint. The Phase-6 **agent loop's tool-calling path is offline-verified
+  but not yet run live end-to-end** — it needs `F1NANCE_API_KEY` (or
+  `DEEPSEEK_API_KEY`) in the environment (the key lives in the f1nance
+  profile's `.env`, not the 3v0 shell). Run:
+  `f1nance/.venv/bin/python -m f1nance.agent chat -q "…"`.
 - F1NANCE commits on `main` (pushed; `main == fork/main`):
   - `bc552421a` — `feat(f1nance): found the sovereign financial-agent harness`
   - `4b6ab5345` — `docs(f1nance): make the end-state explicit — F1NANCE leaves Hermes…`
@@ -85,12 +72,14 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   - `119220e2b` — `feat(f1nance): add Phase-4 execution and compliance layer`
   - `4638fba7e` — `feat(f1nance): add Phase-5 desk (multi-agent) + store-first core`
   - `7f9fe4c3e` — `feat(f1nance): add desk live executor (Hermes-free model call) + live CLI`
-- Upstream `main` moves fast (it advanced repeatedly during this session).
-  Re-check `git ls-remote origin HEAD` before claiming "latest". **Not yet
-  rebased** — commit Phase work first, then rebase as a separate step.
+  - `f384ebca2` — `feat(f1nance): add Phase-6 standalone agent runtime (no Hermes)`
+- Upstream `main` moves fast. Re-check `git ls-remote origin HEAD` before
+  claiming "latest". **Not yet rebased** — commit Phase work first, then rebase
+  as a separate step.
 - 8 finance skills under `f1nance/skills/`; `market-data`,
   `portfolio-management`, and `quant-methods` at v0.2.0, `execution-trading`
-  new at v0.1.0. No new skill in Phase 5 — `desk` and `core` are engines.
+  at v0.1.0. The `desk`, `core`, and `agent` packages are engines/runtime, not
+  skills.
 
 ## Skills (canonical source: `f1nance/skills/`)
 
@@ -125,37 +114,48 @@ additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`.
   unsupported) — cosmetic; chat itself works.
 - **The TUI terminal guard can block a `git commit`** with a false "cannot
   restart or stop the gateway" error (seen once on a multi-line `-m` message).
-  Workaround: `git add -A`, then a single-line `git commit -m "..."` — that
-  runs clean.
+  Workaround: `git add <paths>`, then a single-line `git commit -m "..."`.
 - **deepseek-v4-pro is a reasoning model** — it spends `max_tokens` on
   `reasoning_content` *before* `content`, so a small cap truncates the
   chain-of-thought and returns empty content (`finish_reason: length`). The
-  desk live executor defaults `max_tokens` to 8192 (override via
-  `F1NANCE_MODEL_MAX_TOKENS`); a raw probe with 1000 reproduced the empty
-  response.
+  agent and desk clients default `max_tokens` to 8192 (override via
+  `F1NANCE_MODEL_MAX_TOKENS`). The agent client reads `reasoning_content` but
+  never echoes it back (the API rejects it on input).
+- **The standalone agent's store/ledger paths are package-anchored, not
+  CWD-anchored.** `f1nance/agent/paths.py` resolves `f1nance/core/store.json`
+  and `f1nance/SOUL.md` from the package location (override `F1NANCE_STORE`).
+  The execution ledger is in-memory by default; persist via `--ledger` or
+  `F1NANCE_LEDGER`.
 
 ## Next steps (pick up here)
 
-1. **Phase 6 — independence (leave the chassis)**: F1NANCE becomes its own
-   standalone agent — own runtime/entry point, own tool registry, own memory
-   and decision substrate (the `f1nance/core/` store is the seed), with no
-   Hermes-only coupling in the native core. The desk already runs live (the
-   `live` executor is wired); what remains is the standalone runtime itself.
-   Exit criteria: all finance capabilities run on the standalone substrate
-   and tests are green on both.
-2. Optionally rebase upstream (`git fetch origin && git rebase origin/main`)
+1. **Live-verify the agent loop** end-to-end (the one unverified path): with
+   the F1NANCE key in the environment, run
+   `f1nance/.venv/bin/python -m f1nance.agent chat -q "value a 60/40 AAPL/TLT portfolio"`.
+   This is the first live exercise of the tool-calling protocol; watch for the
+   DeepSeek `tool_calls` wire shape matching `parse_tool_calls`.
+2. **Retire the Hermes profile** when 1deat0r confirms the standalone runtime
+   is primary — the profile stays as a bootstrap fallback until then.
+3. Optionally rebase upstream (`git fetch origin && git rebase origin/main`)
    as a separate step from feature work.
-3. Re-project repo → profile after editing `f1nance/` skills (see Resume
-   commands) so any skill edits are live in the runtime.
+4. Re-project repo → profile after editing `f1nance/` skills (see Resume
+   commands) — only relevant while the profile is still in use.
 
 ## Resume commands
 
 ```bash
+# standalone agent (Phase 6 — the primary interface now)
+cd "/home/mustbearn/Projects/AI Agents/F1NANCE Agent"
+f1nance/.venv/bin/python -m f1nance.agent                 # interactive REPL
+f1nance/.venv/bin/python -m f1nance.agent chat -q "value NVDA"   # one-shot (needs key)
+f1nance/.venv/bin/python -m f1nance.agent --list-tools    # dump 18 tool schemas
+f1nance/.venv/bin/python -m f1nance.agent --system        # print the system prompt
+
+# bootstrap profile (fallback)
 hermes -p f1nance                        # interactive
 hermes -p f1nance chat -q "value NVDA"   # one-shot
 
 # data substrate
-cd "/home/mustbearn/Projects/AI Agents/F1NANCE Agent"
 f1nance/.venv/bin/python -m f1nance.data price AAPL --period 5y
 f1nance/.venv/bin/python -m unittest discover -s f1nance/tests
 

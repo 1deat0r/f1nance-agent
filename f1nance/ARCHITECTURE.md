@@ -105,9 +105,9 @@ bounded-retry parser that refuses to fabricate a finding. This is the executor
 the standalone agent runs at Phase 6, so the desk can go live today without
 reintroducing Hermes coupling.
 
-**End state.** F1NANCE becomes its own agent, separate from Hermes Agent:
-its own runtime, tool registry, and memory/decision substrate, with no
-Hermes dependency. The Hermes profile is a bootstrap convenience that is
-discarded on the way out — never a load-bearing dependency. Build the
-`f1nance/` core Hermes-independent wherever possible so the body is portable
-by design.
+**End state — delivered.** F1NANCE is its own agent, separate from Hermes
+Agent: `f1nance/agent/` is the standalone runtime (own entry point, tool
+registry, and memory/decision substrate) with no Hermes dependency. The
+Hermes profile is a bootstrap convenience that is discarded on the way out —
+never a load-bearing dependency. The `f1nance/` core is Hermes-independent by
+design, so the body is portable and the chassis is not mourned.
