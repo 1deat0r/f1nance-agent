@@ -59,8 +59,16 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   store (supersede/retract, never overwrite) with a projector that renders
   the active facts into a derived view — the repo is the body, the profile is
   the projection.
-- **262 offline unit tests** (`f1nance/tests/`; 29 Phase-1 + 62 Phase-2 + 49
-  Phase-3 + 64 Phase-4 + 58 Phase-5), all green: `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
+- **Desk live executor wired** (`f1nance/desk/live.py`): the `Executor` seam
+  is now backed by a Hermes-free model call (`ModelClient` over stdlib
+  `urllib`, DeepSeek by default) — `build_prompt` / `parse_finding` /
+  `model_executor` / `env_client` — with a `live` CLI command and a
+  bounded-retry parser that raises rather than fabricates a finding.
+  Live-verified against the real DeepSeek endpoint (two-seat trim brief →
+  `neutral` @ 0.7; no-fabrication guardrail visibly respected in the output).
+- **287 offline unit tests** (`f1nance/tests/`; 29 Phase-1 + 62 Phase-2 + 49
+  Phase-3 + 64 Phase-4 + 58 Phase-5 + 25 desk-live), all green:
+  `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
 - **Live-verified** against yfinance (AAPL), FRED (CPIAUCSL), and SEC EDGAR
   (Apple CIK 320193 → 505 XBRL tags). Cache hit / as-of / degraded confirmed.
 - F1NANCE commits on `main` (pushed; `main == fork/main`):
@@ -76,6 +84,7 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   - `2de11389b` — `docs(f1nance): record Phase-3 commit hash and state in HANDOFF`
   - `119220e2b` — `feat(f1nance): add Phase-4 execution and compliance layer`
   - `4638fba7e` — `feat(f1nance): add Phase-5 desk (multi-agent) + store-first core`
+  - `7f9fe4c3e` — `feat(f1nance): add desk live executor (Hermes-free model call) + live CLI`
 - Upstream `main` moves fast (it advanced repeatedly during this session).
   Re-check `git ls-remote origin HEAD` before claiming "latest". **Not yet
   rebased** — commit Phase work first, then rebase as a separate step.
@@ -118,16 +127,22 @@ additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`.
   restart or stop the gateway" error (seen once on a multi-line `-m` message).
   Workaround: `git add -A`, then a single-line `git commit -m "..."` — that
   runs clean.
+- **deepseek-v4-pro is a reasoning model** — it spends `max_tokens` on
+  `reasoning_content` *before* `content`, so a small cap truncates the
+  chain-of-thought and returns empty content (`finish_reason: length`). The
+  desk live executor defaults `max_tokens` to 8192 (override via
+  `F1NANCE_MODEL_MAX_TOKENS`); a raw probe with 1000 reproduced the empty
+  response.
 
 ## Next steps (pick up here)
 
 1. **Phase 6 — independence (leave the chassis)**: F1NANCE becomes its own
    standalone agent — own runtime/entry point, own tool registry, own memory
    and decision substrate (the `f1nance/core/` store is the seed), with no
-   Hermes-only coupling in the native core. Exit criteria: all finance
-   capabilities run on the standalone substrate and tests are green on both.
-   Before that, wire a real executor into `f1nance/desk/` (a model call /
-   delegated subagent) so the desk can run live, not just scripted.
+   Hermes-only coupling in the native core. The desk already runs live (the
+   `live` executor is wired); what remains is the standalone runtime itself.
+   Exit criteria: all finance capabilities run on the standalone substrate
+   and tests are green on both.
 2. Optionally rebase upstream (`git fetch origin && git rebase origin/main`)
    as a separate step from feature work.
 3. Re-project repo → profile after editing `f1nance/` skills (see Resume
@@ -165,6 +180,7 @@ f1nance/.venv/bin/python -m f1nance.execution export ledger.jsonl
 f1nance/.venv/bin/python -m f1nance.desk seats
 f1nance/.venv/bin/python -m f1nance.desk route spec.json
 f1nance/.venv/bin/python -m f1nance.desk run spec.json
+f1nance/.venv/bin/python -m f1nance.desk live spec.json   # real model calls (needs DEEPSEEK_API_KEY)
 
 # core (store-first memory/decision substrate)
 f1nance/.venv/bin/python -m f1nance.core record spec.json
