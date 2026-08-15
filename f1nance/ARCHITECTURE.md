@@ -69,9 +69,9 @@ every task, in every domain:
 | Skill | Domain(s) | Status |
 |---|---|---|
 | `f1nance` (umbrella) | All — routing + guardrails | ✅ v0.01 |
-| `market-data` | All (the data substrate) | ✅ v0.01 |
+| `market-data` | All (the data substrate) | ✅ v0.2.0 |
 | `valuation` | IB, Asset Mgmt, Advisory | ✅ v0.01 |
-| `portfolio-management` | Asset Mgmt, Advisory | ✅ v0.01 |
+| `portfolio-management` | Asset Mgmt, Advisory | ✅ v0.2.0 |
 | `financial-statement-analysis` | Corp Finance, IB, Advisory | ✅ v0.01 |
 | `macro-analysis` | Markets & Trading, Advisory | ✅ v0.01 |
 | `quant-methods` | Quantitative, Asset Mgmt | ✅ v0.01 |

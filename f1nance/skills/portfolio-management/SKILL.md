@@ -1,7 +1,7 @@
 ---
 name: portfolio-management
 description: "Build and manage a portfolio: allocation, risk metrics (vol, Sharpe, drawdown, VaR), rebalancing, attribution, position sizing."
-version: 0.1.0
+version: 0.2.0
 author: F1NANCE Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -16,6 +16,26 @@ metadata:
 
 The hedge-fund / portfolio-manager / advisor lens: turn a set of ideas into a
 portfolio that survives, and measure how well it actually did.
+
+## The engine (`f1nance/portfolio`)
+
+The arithmetic below is implemented in the stdlib-only `f1nance/portfolio`
+package — use it rather than hand-rolling the math, so a number is never
+arithmetically fabricated and every degenerate input raises instead of guessing.
+See `f1nance/portfolio/README.md` for full API.
+
+```python
+from f1nance.portfolio import Portfolio, Position, brinson
+from f1nance.portfolio.risk import (annualized_volatility, sharpe_ratio,
+                                    var_historical, cvar_historical,
+                                    max_drawdown, beta, concentration)
+
+p = Portfolio(positions=[Position("AAPL", 100, 210.0)],
+              cash={"USD": 5000}, fx_rates={"EUR": 1.09})
+p.market_value(); p.weights(); p.exposure(); p.cash_drag(0.08)
+```
+
+CLI: `f1nance/.venv/bin/python -m f1nance.portfolio value|risk|attr <spec.json>`.
 
 ## Start from the investor, not the assets
 

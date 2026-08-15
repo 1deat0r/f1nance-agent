@@ -31,12 +31,16 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
 
 ## Current state (verified this session)
 
-- **Phase 0 ✅, Phase 1 ✅.** Phase 1 shipped the `f1nance/data/` fetch/cache
-  layer (see `f1nance/data/README.md`): stdlib-first (stooq, FRED, EDGAR),
-  yfinance optional in its own `f1nance/.venv/` (Python 3.11), as-of/source/
-  degraded provenance on every result, graceful degradation, no fabrication.
-- **29 offline unit tests** (`f1nance/tests/`), all green:
-  `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
+- **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅.** Phase 1 shipped the `f1nance/data/`
+  fetch/cache layer (see `f1nance/data/README.md`): stdlib-first (stooq, FRED,
+  EDGAR), yfinance optional in its own `f1nance/.venv/` (Python 3.11),
+  as-of/source/degraded provenance on every result, graceful degradation, no
+  fabrication. Phase 2 shipped the `f1nance/portfolio/` engine (see
+  `f1nance/portfolio/README.md`): stdlib-only positions (weights, exposure,
+  FX, cash drag, rebalance), risk (vol, Sharpe/Sortino, VaR/CVaR, beta,
+  drawdown, concentration), and Brinson-Fachler attribution.
+- **91 offline unit tests** (`f1nance/tests/`; 29 Phase-1 + 62 Phase-2), all
+  green: `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
 - **Live-verified** against yfinance (AAPL), FRED (CPIAUCSL), and SEC EDGAR
   (Apple CIK 320193 → 505 XBRL tags). Cache hit / as-of / degraded confirmed.
 - F1NANCE commits on `main` (pushed; `main == fork/main`):
@@ -45,15 +49,19 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   - `1d3021d7f` — `docs(f1nance): add HANDOFF.md for fresh-session pickup`
   - `a30c999e5` — `feat(f1nance): add Phase-1 data substrate (fetch/cache layer + tests)`
   - `f66e24852` — `docs(f1nance): mark Phase 1 complete; refresh skill/roadmap/handoff`
+  - `ce501ceb3` — `docs(f1nance): finalize HANDOFF for fresh-session pickup (Phase 2 ready)`
+  - *(Phase-2 commit added this session — see `git log`)*
 - Upstream `main` moves fast (it advanced repeatedly during this session).
   Re-check `git ls-remote origin HEAD` before claiming "latest". **Not yet
   rebased** — commit Phase work first, then rebase as a separate step.
-- 7 finance skills under `skills/finance/`; `market-data` now v0.2.0.
+- 7 finance skills under `f1nance/skills/`; `market-data` and
+  `portfolio-management` now v0.2.0.
 
 ## Skills (canonical source: `f1nance/skills/`)
 
-`f1nance` (umbrella/harness), `market-data` (v0.2.0 — now fronted by the
-`f1nance/data` layer), `valuation`, `portfolio-management`,
+`f1nance` (umbrella/harness), `market-data` (v0.2.0 — fronted by the
+`f1nance/data` layer), `portfolio-management` (v0.2.0 — backed by the
+`f1nance/portfolio` engine), `valuation`,
 `financial-statement-analysis`, `macro-analysis`, `quant-methods`. Roadmap
 additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`,
 `execution-trading`.
@@ -82,11 +90,12 @@ additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`,
 
 ## Next steps (pick up here)
 
-1. **Phase 2 — portfolio & risk engines**: position-level arithmetic (weights,
-   exposure, FX, cash drag), risk metrics (vol, VaR/CVaR, beta, drawdown,
-   concentration), performance attribution — in `f1nance/`, built on the data
-   layer.
-2. Phase 3 — quant & backtesting. … through Phase 6 — independence.
+1. **Phase 3 — quant & backtesting**: deepen `quant-methods` (factor
+   construction, cross-sectional and time-series models, walk-forward
+   validation, transaction costs, look-ahead-bias guards) and a backtesting
+   harness with honest in-sample/out-of-sample reporting — in `f1nance/`,
+   built on the data + portfolio layers.
+2. Phase 4 — execution & compliance. … through Phase 6 — independence.
 3. Optionally rebase upstream (`git fetch origin && git rebase origin/main`)
    as a separate step from feature work.
 
@@ -100,6 +109,11 @@ hermes -p f1nance chat -q "value NVDA"   # one-shot
 cd "/home/mustbearn/Projects/AI Agents/F1NANCE Agent"
 f1nance/.venv/bin/python -m f1nance.data price AAPL --period 5y
 f1nance/.venv/bin/python -m unittest discover -s f1nance/tests
+
+# portfolio & risk engine
+f1nance/.venv/bin/python -m f1nance.portfolio value spec.json
+f1nance/.venv/bin/python -m f1nance.portfolio risk prices.json
+f1nance/.venv/bin/python -m f1nance.portfolio attr spec.json
 
 # re-project repo → profile after editing f1nance/ skills
 cp f1nance/SOUL.md ~/.hermes/profiles/f1nance/SOUL.md

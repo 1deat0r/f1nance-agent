@@ -21,12 +21,19 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
   FRED, and SEC EDGAR.
 - Free sources only, with graceful degradation when a source is down.
 
-## Phase 2 — Portfolio & risk engines
+## Phase 2 — Portfolio & risk engines ✅
 
-- Portfolio construction and rebalancing tooling; real position-level
-  arithmetic (weights, exposure, FX, cash drag).
-- Risk metrics: volatility, VaR/CVaR, beta, drawdown, concentration.
-- Performance attribution (allocation vs. selection).
+- `f1nance/portfolio/` engine, stdlib-only (no numpy, no Hermes):
+  - `positions` — `Position`/`Portfolio`: weights, long/short/gross/net
+    exposure, FX conversion, cash drag, rebalance trades.
+  - `risk` — returns, vol, Sharpe/Sortino, historical + parametric VaR/CVaR,
+    beta/correlation, drawdown, concentration (HHI / effective N).
+  - `attribution` — Brinson-Fachler allocation / selection / interaction
+    (sums exactly to active return).
+- Every metric raises on degenerate input (missing FX rate, zero variance,
+  mismatched series, weights that don't sum to 1.0) rather than fabricating.
+- 62 offline unit tests added (91 total, all green); `value`/`risk`/`attr`
+  CLI with JSON output.
 
 ## Phase 3 — Quant & backtesting
 
