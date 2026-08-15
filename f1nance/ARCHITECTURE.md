@@ -44,6 +44,7 @@ domain, not to a persona.
 | Computation, models, backtests | execute_code / terminal | Python + numpy/pandas/scipy |
 | Reports, memos, decks, models | pdf/docx/xlsx/powerpoint skills | python-pptx, openpyxl, reportlab |
 | Numbers in → tables out | xlsx/csv skills | openpyxl / csv |
+| Orders, execution costs, trade log | `execution-trading` skill | `f1nance/execution` engine (stdlib) |
 
 ## The guardrail layer (cross-cutting, always on)
 
@@ -79,7 +80,7 @@ every task, in every domain:
 | `fixed-income` (bonds, yield curves, credit) | Markets & Trading | 🗓️ roadmap |
 | `derivatives` (options pricing, greeks, hedging) | Quant, Trading | 🗓️ roadmap |
 | `risk-management` (VaR, stress, limits) | All | 🗓️ roadmap |
-| `execution-trading` (broker wiring, OMS/EMS) | Trading | 🗓️ roadmap |
+| `execution-trading` (orders, costs, trade log) | Trading, all | ✅ v0.1.0 |
 
 ## The native core (`f1nance/`) vs. the Hermes profile
 

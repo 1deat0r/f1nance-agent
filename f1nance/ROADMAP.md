@@ -56,12 +56,25 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
 - 49 offline unit tests added (140 total, all green); `capm`/`ff`/`backtest`/
   `momentum` CLI with JSON output.
 
-## Phase 4 — Execution & compliance
+## Phase 4 — Execution & compliance ✅
 
-- `execution-trading` skill: broker/API wiring (paper first), order types,
-  slippage and market-impact awareness.
-- A compliance/trade-log layer that mirrors every decision with its rationale
-  and confidence — the audit trail.
+- `f1nance/execution/` engine, stdlib-only (no numpy, no broker SDK, no
+  Hermes):
+  - `orders` — order model (market/limit/stop/stop-limit) with structural
+    validation and marketability / stop-placement assessment against a market
+    price.
+  - `impact` — slippage + market-impact model (half-spread per side,
+    square-root impact over participation, fees), participation above 100% of
+    ADV raising and above 10% flagged as the impact zone.
+  - `ledger` — the append-only compliance trade log: every decision mirrored
+    once with rationale, confidence, and loss case; status derived from an
+    immutable event stream; a compliance gate that records (never drops)
+    rejections and refuses to fill them.
+- `execution-trading` skill (v0.1.0) fronting the engine.
+- Every metric raises on degenerate input (non-positive quantity/prices, a
+  price without its order type, negative costs, participation > 100%).
+- 64 offline unit tests added (204 total, all green); `order`/`impact`/
+  `ledger`/`export` CLI with JSON output.
 
 ## Phase 5 — The desk (multi-agent)
 

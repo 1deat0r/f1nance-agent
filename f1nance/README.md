@@ -38,10 +38,12 @@ f1nance/
 ├── ARCHITECTURE.md   # the harness: role taxonomy → capabilities → tools → guardrails
 ├── ROADMAP.md        # phased build plan
 ├── HANDOFF.md        # session-state — read first on wake, then verify against git
-├── VERSION           # 0.03
+├── VERSION           # 0.05
 ├── __init__.py       # native core package root
 ├── data/             # Phase-1 fetch/cache layer (stdlib-first; yfinance optional)
 ├── portfolio/        # Phase-2 portfolio & risk engine (stdlib-only)
+├── quant/            # Phase-3 quant & backtesting engine (stdlib-only)
+├── execution/        # Phase-4 execution & compliance layer (stdlib-only)
 ├── tests/            # offline unit tests (unittest; no Hermes, no network)
 └── skills/           # canonical finance skills (SKILL.md each), installed into the profile
     ├── f1nance/                        # umbrella: the harness operating manual
@@ -50,7 +52,8 @@ f1nance/
     ├── portfolio-management/           # allocation, risk, rebalancing, attribution
     ├── financial-statement-analysis/   # the accountant/CFO lens on the 3 statements
     ├── macro-analysis/                 # rates, FX, credit, inflation, central banks
-    └── quant-methods/                  # factors, stats, backtesting discipline
+    ├── quant-methods/                  # factors, stats, backtesting discipline
+    └── execution-trading/              # orders, execution costs, the trade log
 ```
 
 ## Quick start

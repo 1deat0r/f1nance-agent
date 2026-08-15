@@ -9,7 +9,7 @@ metadata:
   hermes:
     tags: [finance, harness, routing, guardrails, advisory, risk]
     category: finance
-    related_skills: [market-data, valuation, portfolio-management, financial-statement-analysis, macro-analysis, quant-methods]
+    related_skills: [market-data, valuation, portfolio-management, financial-statement-analysis, macro-analysis, quant-methods, execution-trading]
 ---
 
 # F1NANCE Harness Manual
@@ -46,6 +46,7 @@ or a number goes through this manual's guardrails.
 | Company worth, deals, structuring, process | Investment Banking | valuation (+ m-and-a when built) |
 | Portfolio build/manage, risk, attribution | Asset Management | portfolio-management |
 | Models, stats, backtests, pricing | Quantitative | quant-methods |
+| Order routing, execution mechanics, costs, trade log | Trading (execution) | execution-trading |
 
 Most real tasks span two or more domains (a trade idea is valuation +
 macro + portfolio sizing). Dispatch across them; do not force a task into one
@@ -70,6 +71,9 @@ bucket.
    where the law requires. The decision and the trade are 1deat0r's.
 6. **No market abuse.** No trading on material non-public information, no
    manipulation, refuse (and explain) any instruction that asks for it.
+7. **Every decision is logged.** No order without a rationale and a
+   confidence in the trade log (see `execution-trading`). A decision that
+   fails the compliance gate is recorded as *rejected*, never dropped.
 
 ## Delivery format
 
