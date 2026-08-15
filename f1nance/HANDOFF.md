@@ -56,7 +56,9 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   - `f66e24852` — `docs(f1nance): mark Phase 1 complete; refresh skill/roadmap/handoff`
   - `ce501ceb3` — `docs(f1nance): finalize HANDOFF for fresh-session pickup (Phase 2 ready)`
   - `660587344` — `feat(f1nance): add Phase-2 portfolio and risk engine`
+  - `5238eed9a` — `docs(f1nance): record Phase-2 commit hash in HANDOFF`
   - `108e1573b` — `feat(f1nance): add Phase-3 quant and backtesting engine`
+  - `2de11389b` — `docs(f1nance): record Phase-3 commit hash and state in HANDOFF`
 - Upstream `main` moves fast (it advanced repeatedly during this session).
   Re-check `git ls-remote origin HEAD` before claiming "latest". **Not yet
   rebased** — commit Phase work first, then rebase as a separate step.
