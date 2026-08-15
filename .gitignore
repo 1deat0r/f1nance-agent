@@ -201,3 +201,11 @@ native/fts5_cjk/*.so
 # interrupted; consumed by launch-time recovery. Never commit it (was tracked
 # by accident via 3a69e34702, removed in the #72002 salvage).
 .lazy-refresh-incomplete
+
+# F1NANCE native data substrate — track the layer code, ignore the fetched
+# cache. Placed at the END of the file because the `data/` and `data/*`
+# patterns above would otherwise re-ignore these paths (last match wins).
+!f1nance/data/
+f1nance/data/*
+!f1nance/data/*.py
+!f1nance/data/README.md
