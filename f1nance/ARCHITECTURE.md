@@ -98,6 +98,13 @@ memory/decision substrate, modeled on the 3V0 Agent's `3v0/`: an append-only
 provenance store plus a projector that renders the active facts into a
 derived view). The profile remains a derived view; the repo remains the body.
 
+The desk's `Executor` seam is now wired live: `f1nance/desk/live.py` is a
+Hermes-free model executor (`ModelClient` over stdlib `urllib`, DeepSeek by
+default) behind the same callable, with the `live` CLI command and a
+bounded-retry parser that refuses to fabricate a finding. This is the executor
+the standalone agent runs at Phase 6, so the desk can go live today without
+reintroducing Hermes coupling.
+
 **End state.** F1NANCE becomes its own agent, separate from Hermes Agent:
 its own runtime, tool registry, and memory/decision substrate, with no
 Hermes dependency. The Hermes profile is a bootstrap convenience that is

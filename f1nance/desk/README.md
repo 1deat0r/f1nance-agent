@@ -31,6 +31,7 @@ what keeps the body portable toward Phase 6.
 | `seats` | The five-seat roster (each mapped to its domain, roles, engines, routing keywords) and deterministic routing |
 | `brief` | The task/output models — `Brief`, `Finding`, `Verdict` — with structural validation, and the `aggregate` fold |
 | `desk` | The `Desk` coordinator (route → dispatch → validate → aggregate) plus the `scripted_executor` for offline runs |
+| `live` | The live executor — a Hermes-free model call (`ModelClient`, `build_prompt`, `parse_finding`, `model_executor`, `env_client`) behind the same seam |
 
 ## Use
 
@@ -56,27 +57,34 @@ verdict.dissent     # ()
 verdict.loss_cases  # {"pm": "...", "trader": "..."} — nothing dropped
 ```
 
-Swap `scripted_executor` for a real executor to go live:
+Swap `scripted_executor` for the real model executor to go live:
 
 ```python
-def model_executor(seat, brief):
-    ...  # call the seat's model / delegated subagent, return a Finding
-    return Finding(seat.name, thesis, stance, confidence, loss_case, falsify)
+from f1nance.desk import Brief, Desk, env_client, model_executor
 
-verdict = Desk().run(brief, model_executor)
+client = env_client()  # F1NANCE_API_KEY / DEEPSEEK_API_KEY, F1NANCE_MODEL, F1NANCE_BASE_URL
+verdict = Desk().run(brief, model_executor(client))
 ```
+
+The live executor is Hermes-free: `ModelClient` is a stdlib `urllib` call to any
+OpenAI-compatible endpoint (DeepSeek by default). It builds each seat's prompt,
+calls the model, and parses the JSON into a validated `Finding` — retrying with
+a corrective prompt on malformed output, and raising rather than fabricating a
+finding. This is the executor the standalone agent runs at Phase 6.
 
 From the CLI (all JSON on stdout):
 
 ```bash
 f1nance/.venv/bin/python -m f1nance.desk seats
 f1nance/.venv/bin/python -m f1nance.desk route spec.json
-f1nance/.venv/bin/python -m f1nance.desk run spec.json
+f1nance/.venv/bin/python -m f1nance.desk run spec.json      # scripted (offline, deterministic)
+f1nance/.venv/bin/python -m f1nance.desk live spec.json     # real model calls
 ```
 
 `run` does not call a model: it scripts the executor from a `findings` map in
 the spec, so the real route → dispatch → validate → aggregate path runs
-deterministically.
+deterministically. `live` runs the same path with a real model executor built
+from the environment — it needs no `findings` map, only an API key.
 
 ## Conventions (trust the trail, not the assumption)
 
@@ -99,14 +107,26 @@ deterministically.
 
 ## What it deliberately does not do
 
-- **No model calls.** The executor is injected; the desk only coordinates.
-  The offline CLI is scripted on purpose.
+- **The coordinator makes no model calls.** The executor is injected; the desk
+  only routes, dispatches, validates, and aggregates. The *live* executor
+  (`live.py`) does call a model — but it is Hermes-free (stdlib `urllib`), and
+  the offline CLI stays scripted on purpose.
 - **No real subagent spawning.** In the Hermes bootstrap, "spawn a specialist"
   is one executor implementation (a `delegate_task`); here it is one callable.
   The seam is the point — the coordination logic is Hermes-free.
 - **No suitability reasoning.** `horizon` and `risk_capacity` are carried on
   the `Brief` to the executor/umbrella; the deterministic coordinator does
   not pretend to reason over them offline.
+
+## Pitfalls
+
+- **deepseek-v4-pro is a reasoning model and burns `max_tokens` on
+  `reasoning_content` before writing `content`.** A small cap truncates the
+  chain-of-thought and returns empty content (live-verified: `1000` →
+  `finish_reason: length`, `content: ''`). `DEFAULT_MAX_TOKENS` is `8192` — a
+  ceiling, not a reservation — so the model has room to reason *and* emit the
+  JSON. Override with `F1NANCE_MODEL_MAX_TOKENS` if you point the executor at
+  another model.
 
 ## Test
 

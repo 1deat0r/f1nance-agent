@@ -5,12 +5,13 @@ Run with::
     f1nance/.venv/bin/python -m f1nance.desk seats
     f1nance/.venv/bin/python -m f1nance.desk route spec.json
     f1nance/.venv/bin/python -m f1nance.desk run spec.json
+    f1nance/.venv/bin/python -m f1nance.desk live spec.json
 
 Emits JSON to stdout.
 
 Spec shapes::
 
-    # route / run — a brief
+    # route / run / live — a brief
     {
       "objective": "Should we trim the concentrated AAPL position?",
       "context": "...", "horizon": "12m", "risk_capacity": "moderate",
@@ -27,8 +28,10 @@ Spec shapes::
 
 ``run`` does not call a model: the offline CLI's executor is scripted from
 the ``findings`` map, so it exercises the real route → dispatch → validate →
-aggregate path deterministically. A live runtime supplies a real executor
-instead (see ``desk.py``); the coordination logic is identical.
+aggregate path deterministically. ``live`` runs the same path with a real
+model executor built from the environment (``F1NANCE_API_KEY`` /
+``DEEPSEEK_API_KEY``, ``F1NANCE_MODEL``, ``F1NANCE_BASE_URL`` — see
+``live.py``); it needs no ``findings`` map and performs real model calls.
 """
 
 from __future__ import annotations
@@ -40,6 +43,7 @@ from typing import Any, Optional
 
 from .brief import Brief, Verdict
 from .desk import Desk, scripted_executor
+from .live import ModelError, env_client, model_executor
 from .seats import DESK_SEATS, Seat, route
 
 _CONFIDENCE_LABELS = {"high": 0.8, "medium": 0.5, "low": 0.2}
@@ -145,6 +149,12 @@ def cmd_run(spec: dict) -> None:
     _emit(_verdict_dict(verdict))
 
 
+def cmd_live(spec: dict) -> None:
+    brief = _brief_from_spec(spec)
+    verdict = Desk().run(brief, model_executor(env_client()))
+    _emit(_verdict_dict(verdict))
+
+
 def main(argv: Optional[list] = None) -> int:
     parser = argparse.ArgumentParser(
         prog="f1nance.desk",
@@ -160,6 +170,9 @@ def main(argv: Optional[list] = None) -> int:
     run_p = sub.add_parser("run", help="run a brief with scripted findings")
     run_p.add_argument("spec", help="path to JSON spec, or '-' for stdin")
 
+    live_p = sub.add_parser("live", help="run a brief with a live model executor")
+    live_p.add_argument("spec", help="path to JSON spec, or '-' for stdin")
+
     args = parser.parse_args(argv)
     try:
         if args.cmd == "seats":
@@ -168,7 +181,9 @@ def main(argv: Optional[list] = None) -> int:
             cmd_route(_load(args.spec))
         elif args.cmd == "run":
             cmd_run(_load(args.spec))
-    except (ValueError, KeyError, TypeError, json.JSONDecodeError, OSError) as exc:
+        elif args.cmd == "live":
+            cmd_live(_load(args.spec))
+    except (ValueError, KeyError, TypeError, json.JSONDecodeError, OSError, ModelError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
     return 0
