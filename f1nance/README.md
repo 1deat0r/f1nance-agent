@@ -37,6 +37,7 @@ f1nance/
 ├── README.md         # this file
 ├── ARCHITECTURE.md   # the harness: role taxonomy → capabilities → tools → guardrails
 ├── ROADMAP.md        # phased build plan
+├── HANDOFF.md        # session-state — read first on wake, then verify against git
 ├── VERSION           # 0.01
 └── skills/           # canonical finance skills (SKILL.md each), installed into the profile
     ├── f1nance/                        # umbrella: the harness operating manual
