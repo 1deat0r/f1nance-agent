@@ -50,7 +50,7 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   - `a30c999e5` — `feat(f1nance): add Phase-1 data substrate (fetch/cache layer + tests)`
   - `f66e24852` — `docs(f1nance): mark Phase 1 complete; refresh skill/roadmap/handoff`
   - `ce501ceb3` — `docs(f1nance): finalize HANDOFF for fresh-session pickup (Phase 2 ready)`
-  - *(Phase-2 commit added this session — see `git log`)*
+  - `660587344` — `feat(f1nance): add Phase-2 portfolio and risk engine`
 - Upstream `main` moves fast (it advanced repeatedly during this session).
   Re-check `git ls-remote origin HEAD` before claiming "latest". **Not yet
   rebased** — commit Phase work first, then rebase as a separate step.
