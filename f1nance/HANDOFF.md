@@ -39,7 +39,13 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
 - **Live-verified** against yfinance (AAPL), FRED (CPIAUCSL), and SEC EDGAR
   (Apple CIK 320193 → 505 XBRL tags). Cache hit / as-of / degraded confirmed.
-- Upstream `main` moves fast: was `fe0a56ed` at last pin, now `20cf326b`.
+- F1NANCE commits on `main` (pushed; `main == fork/main`):
+  - `bc552421a` — `feat(f1nance): found the sovereign financial-agent harness`
+  - `4b6ab5345` — `docs(f1nance): make the end-state explicit — F1NANCE leaves Hermes…`
+  - `1d3021d7f` — `docs(f1nance): add HANDOFF.md for fresh-session pickup`
+  - `a30c999e5` — `feat(f1nance): add Phase-1 data substrate (fetch/cache layer + tests)`
+  - `f66e24852` — `docs(f1nance): mark Phase 1 complete; refresh skill/roadmap/handoff`
+- Upstream `main` moves fast (it advanced repeatedly during this session).
   Re-check `git ls-remote origin HEAD` before claiming "latest". **Not yet
   rebased** — commit Phase work first, then rebase as a separate step.
 - 7 finance skills under `skills/finance/`; `market-data` now v0.2.0.
