@@ -35,12 +35,26 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
 - 62 offline unit tests added (91 total, all green); `value`/`risk`/`attr`
   CLI with JSON output.
 
-## Phase 3 — Quant & backtesting
+## Phase 3 — Quant & backtesting ✅
 
-- `quant-methods` deepened: factor construction, cross-sectional and time
-  series models, walk-forward validation, transaction costs, look-ahead bias
-  guards.
-- A backtesting harness with honest in-sample/out-of-sample reporting.
+- `f1nance/quant/` engine, stdlib-only (no numpy, no scipy, no Hermes):
+  - `linear` — OLS + ridge regression with full inference (coefficients,
+    standard errors, t-statistics, R² / adjusted R², residual stddev) over a
+    minimal stdlib linear-algebra core. Singular (collinear) designs raise
+    rather than returning a garbage fit.
+  - `factors` — CAPM and multi-factor (Fama-French / Carhart) exposure models
+    (alpha, per-factor beta + t-stat, residual/idiosyncratic vol),
+    cross-sectional z-score and percentile rank, trailing-return momentum and
+    a point-in-time momentum predictor.
+  - `backtest` — a walk-forward backtesting harness: rolling/expanding origin,
+    explicit transaction costs + slippage on turnover, structural look-ahead
+    guards (the predictor is handed only point-in-time data), and honest
+    in-sample (flagged `lookahead=True`) vs out-of-sample reporting.
+- Every metric raises on degenerate input (collinear regressors, constant
+  response, mismatched series, weights that don't sum to 1.0, a held asset
+  with no return, a cross-section with zero variance).
+- 49 offline unit tests added (140 total, all green); `capm`/`ff`/`backtest`/
+  `momentum` CLI with JSON output.
 
 ## Phase 4 — Execution & compliance
 

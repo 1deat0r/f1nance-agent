@@ -74,7 +74,7 @@ every task, in every domain:
 | `portfolio-management` | Asset Mgmt, Advisory | ✅ v0.2.0 |
 | `financial-statement-analysis` | Corp Finance, IB, Advisory | ✅ v0.01 |
 | `macro-analysis` | Markets & Trading, Advisory | ✅ v0.01 |
-| `quant-methods` | Quantitative, Asset Mgmt | ✅ v0.01 |
+| `quant-methods` | Quantitative, Asset Mgmt | ✅ v0.2.0 |
 | `m-and-a` (deal process & structuring) | IB | 🗓️ roadmap |
 | `fixed-income` (bonds, yield curves, credit) | Markets & Trading | 🗓️ roadmap |
 | `derivatives` (options pricing, greeks, hedging) | Quant, Trading | 🗓️ roadmap |

@@ -1,7 +1,7 @@
 ---
 name: quant-methods
 description: "Quant discipline: return statistics, factor models, regression, time series, and honest backtesting (no look-ahead, walk-forward, costs)."
-version: 0.1.0
+version: 0.2.0
 author: F1NANCE Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -17,6 +17,27 @@ metadata:
 The quant lens: build models that are *actually* predictive, not just
 retrospectively fitted. The discipline is the product; the model is a
 byproduct.
+
+## The engine (`f1nance/quant/`)
+
+The discipline below is implemented, stdlib-only, in the Phase-3 native core
+(see `f1nance/quant/README.md`). Prefer it over hand-rolling:
+
+```python
+from f1nance.quant import capm, multi_factor, momentum_predictor, walk_forward
+m = capm(asset_returns, market_returns)          # alpha, beta, R², residual vol
+m = multi_factor(asset_returns, {"MKT": ..., "SMB": ...})  # factor exposures
+r = walk_forward(history, momentum_predictor(lookback=5, top_k=1),
+                 min_train=10, cost_bps=2.0, slippage_bps=1.0)
+r.out_of_sample        # the honest number
+r.in_sample.lookahead  # True — the leaky baseline, reported only for contrast
+```
+
+CLI (JSON out): `python -m f1nance.quant capm|ff|backtest|momentum spec.json`.
+The harness enforces the non-negotiables so you can't skip them by accident:
+point-in-time data only (the predictor never sees the future), costs charged on
+turnover, in-sample flagged `lookahead=True`, and degenerate input raises
+rather than fabricating.
 
 ## Return statistics first
 
