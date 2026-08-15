@@ -31,16 +31,21 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
 
 ## Current state (verified this session)
 
-- **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅.** Phase 1 shipped the `f1nance/data/`
+- **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅.** Phase 1 shipped the `f1nance/data/`
   fetch/cache layer (see `f1nance/data/README.md`): stdlib-first (stooq, FRED,
   EDGAR), yfinance optional in its own `f1nance/.venv/` (Python 3.11),
   as-of/source/degraded provenance on every result, graceful degradation, no
   fabrication. Phase 2 shipped the `f1nance/portfolio/` engine (see
   `f1nance/portfolio/README.md`): stdlib-only positions (weights, exposure,
   FX, cash drag, rebalance), risk (vol, Sharpe/Sortino, VaR/CVaR, beta,
-  drawdown, concentration), and Brinson-Fachler attribution.
-- **91 offline unit tests** (`f1nance/tests/`; 29 Phase-1 + 62 Phase-2), all
-  green: `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
+  drawdown, concentration), and Brinson-Fachler attribution. Phase 3 shipped
+  the `f1nance/quant/` engine (see `f1nance/quant/README.md`): stdlib-only
+  OLS/ridge regression, CAPM and multi-factor exposure models, cross-sectional
+  factor construction, and a walk-forward backtesting harness with explicit
+  costs, structural look-ahead guards, and honest in-sample/out-of-sample
+  reporting.
+- **140 offline unit tests** (`f1nance/tests/`; 29 Phase-1 + 62 Phase-2 + 49
+  Phase-3), all green: `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
 - **Live-verified** against yfinance (AAPL), FRED (CPIAUCSL), and SEC EDGAR
   (Apple CIK 320193 → 505 XBRL tags). Cache hit / as-of / degraded confirmed.
 - F1NANCE commits on `main` (pushed; `main == fork/main`):
@@ -51,18 +56,20 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   - `f66e24852` — `docs(f1nance): mark Phase 1 complete; refresh skill/roadmap/handoff`
   - `ce501ceb3` — `docs(f1nance): finalize HANDOFF for fresh-session pickup (Phase 2 ready)`
   - `660587344` — `feat(f1nance): add Phase-2 portfolio and risk engine`
+  - `108e1573b` — `feat(f1nance): add Phase-3 quant and backtesting engine`
 - Upstream `main` moves fast (it advanced repeatedly during this session).
   Re-check `git ls-remote origin HEAD` before claiming "latest". **Not yet
   rebased** — commit Phase work first, then rebase as a separate step.
-- 7 finance skills under `f1nance/skills/`; `market-data` and
-  `portfolio-management` now v0.2.0.
+- 7 finance skills under `f1nance/skills/`; `market-data`,
+  `portfolio-management`, and `quant-methods` now v0.2.0.
 
 ## Skills (canonical source: `f1nance/skills/`)
 
 `f1nance` (umbrella/harness), `market-data` (v0.2.0 — fronted by the
 `f1nance/data` layer), `portfolio-management` (v0.2.0 — backed by the
 `f1nance/portfolio` engine), `valuation`,
-`financial-statement-analysis`, `macro-analysis`, `quant-methods`. Roadmap
+`financial-statement-analysis`, `macro-analysis`, `quant-methods` (v0.2.0 —
+backed by the `f1nance/quant` engine). Roadmap
 additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`,
 `execution-trading`.
 
@@ -90,12 +97,12 @@ additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`,
 
 ## Next steps (pick up here)
 
-1. **Phase 3 — quant & backtesting**: deepen `quant-methods` (factor
-   construction, cross-sectional and time-series models, walk-forward
-   validation, transaction costs, look-ahead-bias guards) and a backtesting
-   harness with honest in-sample/out-of-sample reporting — in `f1nance/`,
-   built on the data + portfolio layers.
-2. Phase 4 — execution & compliance. … through Phase 6 — independence.
+1. **Phase 4 — execution & compliance**: `execution-trading` skill (broker/API
+   wiring, paper first, order types, slippage and market-impact awareness) and
+   a compliance/trade-log layer that mirrors every decision with its rationale
+   and confidence — the audit trail. Built on the data + portfolio + quant
+   layers in `f1nance/`.
+2. Phase 5 — the desk (multi-agent). … through Phase 6 — independence.
 3. Optionally rebase upstream (`git fetch origin && git rebase origin/main`)
    as a separate step from feature work.
 
@@ -114,6 +121,12 @@ f1nance/.venv/bin/python -m unittest discover -s f1nance/tests
 f1nance/.venv/bin/python -m f1nance.portfolio value spec.json
 f1nance/.venv/bin/python -m f1nance.portfolio risk prices.json
 f1nance/.venv/bin/python -m f1nance.portfolio attr spec.json
+
+# quant & backtesting engine
+f1nance/.venv/bin/python -m f1nance.quant capm spec.json
+f1nance/.venv/bin/python -m f1nance.quant ff spec.json
+f1nance/.venv/bin/python -m f1nance.quant backtest spec.json
+f1nance/.venv/bin/python -m f1nance.quant momentum spec.json
 
 # re-project repo → profile after editing f1nance/ skills
 cp f1nance/SOUL.md ~/.hermes/profiles/f1nance/SOUL.md
