@@ -23,7 +23,7 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   - `origin` → NousResearch/hermes-agent (upstream; rebase to stay current)
   - `fork` → `1deat0r/f1nance-agent` (**public** on GitHub)
   - native core: `f1nance/` (SOUL, README, ARCHITECTURE, ROADMAP, HANDOFF,
-    VERSION, skills/)
+    VERSION, skills/, data/ substrate, tests/)
 - **Runtime profile:** `~/.hermes/profiles/f1nance/` (DeepSeek-v4-pro, TUI)
   - `SOUL.md` + `skills/` are a **projection of `f1nance/`** — the repo is
     canonical, the profile is derived
@@ -31,28 +31,26 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
 
 ## Current state (verified this session)
 
-- Pinned upstream `main`: **`fe0a56ed`** (2026-08-15 14:31). Upstream moves
-  fast — 3 commits landed during the session; re-check `git ls-remote origin
-  HEAD` before claiming "latest".
-- F1NANCE commits on `main` (both pushed, `main == fork/main`):
-  - `bc552421a` — `feat(f1nance): found the sovereign financial-agent harness`
-  - `4b6ab5345` — `docs(f1nance): make the end-state explicit — F1NANCE leaves
-    Hermes to become its own standalone agent`
-- Profile created + wired: SOUL, `config.yaml` (deepseek-v4-pro, `key_env:
-  DEEPSEEK_API_KEY`), key present in profile `.env`, `memories/` seeded, 7
-  finance skills installed under `skills/finance/`.
-- **Smoke test PASSED**: `hermes -p f1nance chat -q "..."` → answered as
-  "F1NANCE Agent, serving my Operator 1deat0r (The 1deat0r)", listed the six
-  domains, and its reasoning trace cited `SOUL.md`.
-- 7 skills: valid frontmatter, indexed, `finance / enabled` in `hermes skills
-  list`.
+- **Phase 0 ✅, Phase 1 ✅.** Phase 1 shipped the `f1nance/data/` fetch/cache
+  layer (see `f1nance/data/README.md`): stdlib-first (stooq, FRED, EDGAR),
+  yfinance optional in its own `f1nance/.venv/` (Python 3.11), as-of/source/
+  degraded provenance on every result, graceful degradation, no fabrication.
+- **29 offline unit tests** (`f1nance/tests/`), all green:
+  `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
+- **Live-verified** against yfinance (AAPL), FRED (CPIAUCSL), and SEC EDGAR
+  (Apple CIK 320193 → 505 XBRL tags). Cache hit / as-of / degraded confirmed.
+- Upstream `main` moves fast: was `fe0a56ed` at last pin, now `20cf326b`.
+  Re-check `git ls-remote origin HEAD` before claiming "latest". **Not yet
+  rebased** — commit Phase work first, then rebase as a separate step.
+- 7 finance skills under `skills/finance/`; `market-data` now v0.2.0.
 
 ## Skills (canonical source: `f1nance/skills/`)
 
-`f1nance` (umbrella/harness), `market-data`, `valuation`,
-`portfolio-management`, `financial-statement-analysis`, `macro-analysis`,
-`quant-methods`. Roadmap additions: `m-and-a`, `fixed-income`, `derivatives`,
-`risk-management`, `execution-trading`.
+`f1nance` (umbrella/harness), `market-data` (v0.2.0 — now fronted by the
+`f1nance/data` layer), `valuation`, `portfolio-management`,
+`financial-statement-analysis`, `macro-analysis`, `quant-methods`. Roadmap
+additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`,
+`execution-trading`.
 
 ## Quirks & lessons (save a fresh session the pain)
 
@@ -61,21 +59,30 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   set globally. `gh api user` → `1deat0r` (token label still `mustbearnold`).
 - **First push is ~665 MB** (full upstream history) and slow; later pushes are
   tiny deltas.
-- Repo is **public** (matches the existing `hermes-agent` fork). Flip private
-  if 1deat0r asks.
+- Repo is **public**. Flip private if 1deat0r asks.
+- **Do not touch** the other profiles (`3v0`, `axiom`) or the shared runtime
+  `~/.hermes/hermes-agent` — 3V0 and axiom are separate agents. F1NANCE's data
+  deps live in its own `f1nance/.venv/`, NOT the shared Hermes venv.
+- **`.gitignore` carve-out must stay at the END of the file.** Upstream has a
+  bare `data/` *and* a later `data/*` rule; `last match wins`, so an earlier
+  F1NANCE negation gets silently re-ignored. The `f1nance/data/` block is
+  deliberately last.
+- **SEC EDGAR 403s without an email in the User-Agent.** The layer defaults to
+  `contact@example.com`; set `F1NANCE_SEC_CONTACT` to a real address.
+- **FRED `fredgraph.csv` date column is `observation_date`** (not `DATE`); the
+  fetcher accepts both.
 - DeepSeek aux "title generation" logs an HTTP 400 (`response_format`
   unsupported) — cosmetic; chat itself works.
-- **Do not touch** the other profiles (`3v0`, `axiom`) or the shared runtime
-  `~/.hermes/hermes-agent` — 3V0 and axiom are separate agents under the same
-  `1deat0r` account.
 
 ## Next steps (pick up here)
 
-1. **Phase 1 — data substrate**: caching + as-of discipline; a `f1nance/data/`
-   fetch/cache layer (needs a `.gitignore` carve-out for `f1nance/data/`).
-   Also: `~/.hermes/hermes-agent/venv/bin/pip install yfinance` if not present.
-2. Phase 2 — portfolio & risk engines.
-3. … through Phase 6 — independence (own runtime/tool registry/substrate).
+1. **Phase 2 — portfolio & risk engines**: position-level arithmetic (weights,
+   exposure, FX, cash drag), risk metrics (vol, VaR/CVaR, beta, drawdown,
+   concentration), performance attribution — in `f1nance/`, built on the data
+   layer.
+2. Phase 3 — quant & backtesting. … through Phase 6 — independence.
+3. Optionally rebase upstream (`git fetch origin && git rebase origin/main`)
+   as a separate step from feature work.
 
 ## Resume commands
 
@@ -83,10 +90,12 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
 hermes -p f1nance                        # interactive
 hermes -p f1nance chat -q "value NVDA"   # one-shot
 
-# rebase upstream (keep the hardfork current)
-cd "/home/mustbearn/Projects/AI Agents/F1NANCE Agent" && git fetch origin && git rebase origin/main
+# data substrate
+cd "/home/mustbearn/Projects/AI Agents/F1NANCE Agent"
+f1nance/.venv/bin/python -m f1nance.data price AAPL --period 5y
+f1nance/.venv/bin/python -m unittest discover -s f1nance/tests
 
-# re-project repo → profile after editing f1nance/
+# re-project repo → profile after editing f1nance/ skills
 cp f1nance/SOUL.md ~/.hermes/profiles/f1nance/SOUL.md
 cp -r f1nance/skills/* ~/.hermes/profiles/f1nance/skills/finance/
 ```
