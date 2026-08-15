@@ -1,7 +1,7 @@
 ---
 name: market-data
-description: "Pull real market data: equity prices/fundamentals (yfinance), macro series (FRED), filings (SEC EDGAR), free daily (stooq)."
-version: 0.1.0
+description: "Pull real market data via f1nance/data layer: equity (yfinance/stooq), macro (FRED), filings (EDGAR)."
+version: 0.2.0
 author: F1NANCE Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -16,99 +16,96 @@ metadata:
 
 The data substrate every other skill runs on. Rule one: **never fabricate a
 number** — if a source is down, say the data is unavailable and degrade
-gracefully. Rule two: **track as-of dates**; a price without its date is
-noise.
+gracefully. Rule two: **track as-of dates**; a price without its date is noise.
 
-## Sources by need
+## Primary path: the `f1nance/data` layer
+
+The fetch/cache layer in the repo (`f1nance/data/`) is the canonical way to
+pull data. It caches to disk, records `as_of` + `source` + `degraded` on every
+result, and degrades yfinance → stooq rather than inventing a value.
+
+```bash
+# from the repo root; runs on its own venv (NOT the shared Hermes venv)
+f1nance/.venv/bin/python -m f1nance.data price AAPL --period 5y
+f1nance/.venv/bin/python -m f1nance.data price AAPL --interval 1h --refresh   # intraday
+f1nance/.venv/bin/python -m f1nance.data macro CPIAUCSL DFF DGS10
+f1nance/.venv/bin/python -m f1nance.data facts 320193                         # CIK → XBRL fundamentals
+f1nance/.venv/bin/python -m f1nance.data filings 320193
+f1nance/.venv/bin/python -m f1nance.data cache list | clear
+```
+
+As a library (inside `execute_code`, run with the f1nance venv's python):
+
+```python
+from f1nance.data import get_price_history, get_macro_series, get_company_facts, SourceUnavailable
+ds = get_price_history("AAPL")            # Dataset: source, as_of, fetched_at, degraded, cached, data
+ds = get_macro_series("CPIAUCSL")
+ds = get_company_facts("320193")
+```
+
+`as_of` is the data's own timestamp; `fetched_at` is when this snapshot was
+pulled. `degraded=True` means it came from a fallback source (stooq). A total
+failure raises `SourceUnavailable` — it never returns a made-up number.
+
+## Sources by need (raw, when the layer isn't enough)
 
 | Need | Source | How |
 |---|---|---|
-| Equity price history, fundamentals, dividends, options | yfinance (Yahoo) | Python |
-| Free daily OHLCV for many tickers (no API key) | stooq | HTTP CSV |
-| Macro series: GDP, CPI, rates, money, employment | FRED (St. Louis Fed) | `fredgraph.csv` |
-| SEC filings: 10-K/10-Q/8-K, XBRL facts, insider | SEC EDGAR | REST / JSON |
-| News, research, sentiment, events | web_search / web_extract | keyless DDG backend |
+| Equity price history, fundamentals, options | yfinance (Yahoo) | `f1nance/data` → yfinance |
+| Free daily OHLCV fallback (no key) | stooq | `f1nance/data` → stooq |
+| Macro series: GDP, CPI, rates, money, employment | FRED (St. Louis Fed) | `f1nance/data` → FRED |
+| SEC filings: 10-K/10-Q/8-K, XBRL facts, insider | SEC EDGAR | `f1nance/data` → EDGAR |
+| News, research, sentiment | `web_search` / `web_extract` | keyless DDG backend |
 
 ## yfinance (equities & fundamentals)
 
-Install into the runtime venv once (`~/.hermes/hermes-agent/venv/bin/pip
-install yfinance`). Then via `execute_code` or a `terminal` python one-liner:
-
-```python
-import yfinance as yf
-t = yf.Ticker("AAPL")
-px = t.history(period="5y", auto_adjust=True)   # daily OHLCV DataFrame
-info = t.info                                    # market cap, P/E, beta, etc.
-fins = t.quarterly_income_stmt / t.balance_sheet / t.cashflow
-hist = t.income_stmt  # or t.financials for annual
-divs = t.dividends
-```
-
-- `auto_adjust=True` back-adjusts for splits/dividends — correct for return
-  math, wrong for raw-price levels; know which you need.
-- `t.info` is a cached dict of mixed reliability; prefer statement objects
-  for financials.
-- **Pitfall:** `history` returns data in the exchange's local timezone and
-  rows are date-indexed. Never compare a US close to an EU close without
-  normalizing as-of dates.
-- **Rate limits:** Yahoo throttles aggressively; batch, cache to disk, and
-  sleep between many-ticker pulls.
+- `auto_adjust=True` (default in the layer) back-adjusts for splits/dividends
+  — correct for return math, wrong for raw-price levels; know which you need.
+  Pass `--no-adjust` for raw.
+- `t.info` is a cached dict of mixed reliability; prefer statement objects for
+  financials.
+- **Pitfall:** `history` rows are exchange-local-time; the layer normalizes
+  as-of to UTC at the cache boundary. Never compare a US close to an EU close
+  without normalizing.
+- **Rate limits:** Yahoo throttles aggressively; the layer caches and only
+  refetches on TTL expiry or `--refresh`.
 
 ## FRED (macro)
 
-Every series has a page `https://fred.stlouisfed.org/series/<ID>` and a
-downloadable CSV at `https://fred.stlouisfed.org/graph/fredgraph.csv?id=<ID>`.
-
-```bash
-curl -s "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL&id=DFF&id=GDP" -o macro.csv
-```
-
-Useful IDs: `DFF` (Fed funds), `CPIAUCSL` (CPI), `PCEPI` (PCE), `GDP`,
-`UNRATE` (unemployment), `DGS10`/`DGS2` (10y/2y Treasury), `T10Y2Y` (10y-2y
-spread), `BAMLH0A0HYM2` (HY OAS), `M2SL` (M2), `VIXCLS` (VIX).
-
-- Values are monthly/quarterly observations; first column is the date, second
-  the value. Handle missing cells (`.`) before computing.
-- **Pitfall:** real vs. nominal — CPI/GDP growth must be stated explicitly;
-  comparing a real series to a nominal one is a classic error.
+- `f1nance/data` hits
+  `https://fred.stlouisfed.org/graph/fredgraph.csv?id=<ID>`. The CSV's date
+  column is **`observation_date`** (not `DATE`); the layer handles both.
+- Useful IDs: `DFF` (Fed funds), `CPIAUCSL` (CPI), `PCEPI` (PCE), `GDP`,
+  `UNRATE` (unemployment), `DGS10`/`DGS2` (10y/2y Treasury), `T10Y2Y`
+  (10y-2y spread), `BAMLH0A0HYM2` (HY OAS), `M2SL` (M2), `VIXCLS` (VIX).
+- **Pitfall:** real vs. nominal — state which you're using; comparing a real
+  series to a nominal one is a classic error.
 
 ## SEC EDGAR (filings)
 
-- **Full-text search:** `https://efts.sec.gov/LATEST/search-index?q=%22...%22`
-  (JSON), or `https://efts.sec.gov/LATEST/search-index?q=...&forms=10-K`.
-- **Company facts (XBRL, structured):**
-  `https://data.sec.gov/api/xbrl/companyfacts/CIK##########.json` (CIK
-  zero-padded to 10 digits, no dashes).
-- **Company submissions (filings list):**
-  `https://data.sec.gov/submissions/CIK##########.json`.
-- **Filing documents:** `https://www.sec.gov/Archives/edgar/data/<CIK>/<accession no-dashes>/<doc>.htm`.
-- EDGAR requires a `User-Agent` header with a contact (`User-Agent: F1NANCE
-  Agent <you@example.com>`); set it or you will be throttled/denied.
+- Company facts (XBRL): `https://data.sec.gov/api/xbrl/companyfacts/CIK##########.json`
+- Submissions (filing list): `https://data.sec.gov/submissions/CIK##########.json`
+- Full-text search: `https://efts.sec.gov/LATEST/search-index?q=%22...%22`
+- **User-Agent is mandatory and must include a contact email** — EDGAR returns
+  HTTP 403 without one. The layer defaults to `contact@example.com`; set
+  `F1NANCE_SEC_CONTACT` to a real address before heavy use. CIK is zero-padded
+  to 10 digits (the layer's `normalize_cik` does this for you).
 
-## stooq (free daily, no key)
+## stooq (free daily fallback)
 
-```bash
-curl -s "https://stooq.com/q/d/l/?s=aapl.us&i=d" -o aapl.csv
-```
-
-- `s=<ticker>.us` for US equities, `.uk`, `.de`, etc. for others; `i=d` daily.
-- Last column is volume; first is date.
-- **Pitfall:** stooq data can lag by a day and has sparse coverage for small
-  caps/ETFs; treat it as a fallback, not primary.
-
-## News & research
-
-Use `web_search` / `web_extract` (keyless DDG backend) for news, sentiment,
-and qualitative research. Prefer primary sources (company IR, regulator,
-central bank) over aggregators. For a cited, verifiable document, use the
-`grounded-citations` skill.
+- `https://stooq.com/q/d/l/?s=<ticker>.us&i=d` — the layer uses this when
+  yfinance is missing or down (marks `degraded=True`).
+- **Pitfall:** stooq lags by a day and has sparse coverage for small caps/ETFs;
+  treat it as a fallback, never primary. The layer will *not* substitute stooq
+  daily bars for an intraday request — it raises instead.
 
 ## Working discipline
 
-1. **Cache to disk.** Don't re-hit the network for the same series in one
-   session; write fetched frames to a workspace CSV/JSON.
+1. **Prefer the layer.** It caches, records as-of, and degrades honestly.
 2. **Record the as-of date** alongside every number you carry forward.
-3. **Degrade gracefully.** If yfinance is throttled, try stooq; if FRED is
-   down, say so rather than substituting a stale or made-up value.
+3. **Degrade gracefully.** If yfinance is throttled, the layer falls back to
+   stooq; if FRED is down, it says so rather than substituting a stale value.
 4. **Beware survivorship and adjustment.** Split-adjusted vs. raw prices,
    point-in-time vs. restated fundamentals — state which you used.
+5. **Reuse the cache.** The layer's TTLs (intraday 15m, daily 6h, macro 24h,
+   fundamentals 7d, filings 24h) keep repeated pulls cheap and consistent.

@@ -10,13 +10,16 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
   skills.
 - Runtime profile `~/.hermes/profiles/f1nance/` projected from the repo.
 
-## Phase 1 — Data substrate hardening
+## Phase 1 — Data substrate hardening ✅
 
-- Solidify `market-data`: rate limits, caching, tickers vs. fundamentals vs.
-  macro vs. filings, as-of discipline (never mix timezones).
+- `f1nance/data/` fetch/cache layer: stdlib-first (stooq, FRED, EDGAR),
+  yfinance optional (own `f1nance/.venv`), as-of + source + degraded
+  provenance on every result, graceful degradation, no-fabrication guarantee.
+- `.gitignore` carve-out so the layer code is tracked and `f1nance/data/cache/`
+  is not.
+- 29 offline unit tests (`f1nance/tests/`); live-verified against yfinance,
+  FRED, and SEC EDGAR.
 - Free sources only, with graceful degradation when a source is down.
-- A `f1nance/data/` fetch/cache layer (requires `.gitignore` carve-out for
-  `f1nance/data/`).
 
 ## Phase 2 — Portfolio & risk engines
 

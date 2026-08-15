@@ -38,7 +38,10 @@ f1nance/
 ├── ARCHITECTURE.md   # the harness: role taxonomy → capabilities → tools → guardrails
 ├── ROADMAP.md        # phased build plan
 ├── HANDOFF.md        # session-state — read first on wake, then verify against git
-├── VERSION           # 0.01
+├── VERSION           # 0.02
+├── __init__.py       # native core package root
+├── data/             # Phase-1 fetch/cache layer (stdlib-first; yfinance optional)
+├── tests/            # offline unit tests (unittest; no Hermes, no network)
 └── skills/           # canonical finance skills (SKILL.md each), installed into the profile
     ├── f1nance/                        # umbrella: the harness operating manual
     ├── market-data/                    # where and how to get real market data
