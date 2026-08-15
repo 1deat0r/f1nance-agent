@@ -103,6 +103,10 @@ additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`.
   fetcher accepts both.
 - DeepSeek aux "title generation" logs an HTTP 400 (`response_format`
   unsupported) — cosmetic; chat itself works.
+- **The TUI terminal guard can block a `git commit`** with a false "cannot
+  restart or stop the gateway" error (seen once on a multi-line `-m` message).
+  Workaround: `git add -A`, then a single-line `git commit -m "..."` — that
+  runs clean.
 
 ## Next steps (pick up here)
 
