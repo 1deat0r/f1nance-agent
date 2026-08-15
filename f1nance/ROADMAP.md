@@ -46,8 +46,17 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
 - Store-first evolution loop in `f1nance/` (memory + decisions as append-only
   provenance), so the profile stays a derived view and the repo stays the body.
 
+## Phase 6 — Independence (leave the chassis)
+
+- F1NANCE becomes its own standalone agent, separate from Hermes Agent: own
+  runtime/entry point, own tool registry, own memory and decision substrate.
+- The Hermes profile is retired; the body (`f1nance/`) runs on its own.
+- Exit criteria: zero Hermes-only coupling in the native core, all finance
+  capabilities running on the standalone substrate, tests green on both.
+
 ## Principles that survive every phase
 
 - Honesty over confidence. Risk over return. Verified over elegant.
-- The repo is the body; the profile is a projection.
+- The repo is the body; the Hermes profile is a temporary projection,
+  discarded on the way out.
 - Every phase ships with tests and a clean commit, or it does not ship.

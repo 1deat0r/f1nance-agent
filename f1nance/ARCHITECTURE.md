@@ -92,4 +92,11 @@ every task, in every domain:
 
 Later phases move more of the agent's evolution loop into `f1nance/` (a
 store-first memory/decision substrate like the 3V0 Agent's `3v0/`), so that
-the profile remains a derived view and the repo remains the body.
+so that the profile remains a derived view and the repo remains the body.
+
+**End state.** F1NANCE becomes its own agent, separate from Hermes Agent:
+its own runtime, tool registry, and memory/decision substrate, with no
+Hermes dependency. The Hermes profile is a bootstrap convenience that is
+discarded on the way out — never a load-bearing dependency. Build the
+`f1nance/` core Hermes-independent wherever possible so the body is portable
+by design.
