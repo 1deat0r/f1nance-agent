@@ -31,7 +31,7 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
 
 ## Current state (verified this session)
 
-- **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅.** Phase 1 shipped the `f1nance/data/`
+- **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅, Phase 5 ✅.** Phase 1 shipped the `f1nance/data/`
   fetch/cache layer (see `f1nance/data/README.md`): stdlib-first (stooq, FRED,
   EDGAR), yfinance optional in its own `f1nance/.venv/` (Python 3.11),
   as-of/source/degraded provenance on every result, graceful degradation, no
@@ -49,8 +49,18 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   slippage & market impact (half-spread + square-root impact + fees), and an
   append-only compliance trade log that mirrors every decision with its
   rationale, confidence, and loss case — rejections recorded, never dropped.
-- **204 offline unit tests** (`f1nance/tests/`; 29 Phase-1 + 62 Phase-2 + 49
-  Phase-3 + 64 Phase-4), all green: `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
+  Phase 5 shipped the `f1nance/desk/` engine (see `f1nance/desk/README.md`):
+  stdlib-only multi-agent coordination — a five-seat roster (PM, trader,
+  quant, banker, CFO) over the six capability domains, deterministic routing,
+  and an executor-injected coordinator that folds each seat's thesis + stance
+  + confidence + loss case into one verdict (dissent surfaced, every loss
+  case preserved). And the `f1nance/core/` engine (see
+  `f1nance/core/README.md`): an append-only provenance-aware memory/decision
+  store (supersede/retract, never overwrite) with a projector that renders
+  the active facts into a derived view — the repo is the body, the profile is
+  the projection.
+- **262 offline unit tests** (`f1nance/tests/`; 29 Phase-1 + 62 Phase-2 + 49
+  Phase-3 + 64 Phase-4 + 58 Phase-5), all green: `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
 - **Live-verified** against yfinance (AAPL), FRED (CPIAUCSL), and SEC EDGAR
   (Apple CIK 320193 → 505 XBRL tags). Cache hit / as-of / degraded confirmed.
 - F1NANCE commits on `main` (pushed; `main == fork/main`):
@@ -65,12 +75,13 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   - `108e1573b` — `feat(f1nance): add Phase-3 quant and backtesting engine`
   - `2de11389b` — `docs(f1nance): record Phase-3 commit hash and state in HANDOFF`
   - `119220e2b` — `feat(f1nance): add Phase-4 execution and compliance layer`
+  - `4638fba7e` — `feat(f1nance): add Phase-5 desk (multi-agent) + store-first core`
 - Upstream `main` moves fast (it advanced repeatedly during this session).
   Re-check `git ls-remote origin HEAD` before claiming "latest". **Not yet
   rebased** — commit Phase work first, then rebase as a separate step.
 - 8 finance skills under `f1nance/skills/`; `market-data`,
   `portfolio-management`, and `quant-methods` at v0.2.0, `execution-trading`
-  new at v0.1.0.
+  new at v0.1.0. No new skill in Phase 5 — `desk` and `core` are engines.
 
 ## Skills (canonical source: `f1nance/skills/`)
 
@@ -110,15 +121,17 @@ additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`.
 
 ## Next steps (pick up here)
 
-1. **Phase 5 — the desk (multi-agent)**: spawn specialized subagents per
-   domain (a virtual desk: PM, trader, quant, banker, CFO) coordinated by the
-   umbrella harness, plus a store-first evolution loop in `f1nance/` (memory +
-   decisions as append-only provenance) so the profile stays a derived view
-   and the repo stays the body. Then Phase 6 — independence.
+1. **Phase 6 — independence (leave the chassis)**: F1NANCE becomes its own
+   standalone agent — own runtime/entry point, own tool registry, own memory
+   and decision substrate (the `f1nance/core/` store is the seed), with no
+   Hermes-only coupling in the native core. Exit criteria: all finance
+   capabilities run on the standalone substrate and tests are green on both.
+   Before that, wire a real executor into `f1nance/desk/` (a model call /
+   delegated subagent) so the desk can run live, not just scripted.
 2. Optionally rebase upstream (`git fetch origin && git rebase origin/main`)
    as a separate step from feature work.
 3. Re-project repo → profile after editing `f1nance/` skills (see Resume
-   commands) so the new `execution-trading` skill is live in the runtime.
+   commands) so any skill edits are live in the runtime.
 
 ## Resume commands
 
@@ -147,6 +160,18 @@ f1nance/.venv/bin/python -m f1nance.execution order spec.json
 f1nance/.venv/bin/python -m f1nance.execution impact spec.json
 f1nance/.venv/bin/python -m f1nance.execution ledger spec.json --out ledger.jsonl
 f1nance/.venv/bin/python -m f1nance.execution export ledger.jsonl
+
+# desk (multi-agent coordination)
+f1nance/.venv/bin/python -m f1nance.desk seats
+f1nance/.venv/bin/python -m f1nance.desk route spec.json
+f1nance/.venv/bin/python -m f1nance.desk run spec.json
+
+# core (store-first memory/decision substrate)
+f1nance/.venv/bin/python -m f1nance.core record spec.json
+f1nance/.venv/bin/python -m f1nance.core retract <id>
+f1nance/.venv/bin/python -m f1nance.core export
+f1nance/.venv/bin/python -m f1nance.core history <id>
+f1nance/.venv/bin/python -m f1nance.core render --out STATE.md
 
 # re-project repo → profile after editing f1nance/ skills
 cp f1nance/SOUL.md ~/.hermes/profiles/f1nance/SOUL.md
