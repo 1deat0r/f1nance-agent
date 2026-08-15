@@ -31,7 +31,7 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
 
 ## Current state (verified this session)
 
-- **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅.** Phase 1 shipped the `f1nance/data/`
+- **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅.** Phase 1 shipped the `f1nance/data/`
   fetch/cache layer (see `f1nance/data/README.md`): stdlib-first (stooq, FRED,
   EDGAR), yfinance optional in its own `f1nance/.venv/` (Python 3.11),
   as-of/source/degraded provenance on every result, graceful degradation, no
@@ -43,9 +43,14 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   OLS/ridge regression, CAPM and multi-factor exposure models, cross-sectional
   factor construction, and a walk-forward backtesting harness with explicit
   costs, structural look-ahead guards, and honest in-sample/out-of-sample
-  reporting.
-- **140 offline unit tests** (`f1nance/tests/`; 29 Phase-1 + 62 Phase-2 + 49
-  Phase-3), all green: `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
+  reporting. Phase 4 shipped the `f1nance/execution/` engine (see
+  `f1nance/execution/README.md`): stdlib-only orders (market/limit/stop/
+  stop-limit, with validation plus marketability and stop-side assessment),
+  slippage & market impact (half-spread + square-root impact + fees), and an
+  append-only compliance trade log that mirrors every decision with its
+  rationale, confidence, and loss case — rejections recorded, never dropped.
+- **204 offline unit tests** (`f1nance/tests/`; 29 Phase-1 + 62 Phase-2 + 49
+  Phase-3 + 64 Phase-4), all green: `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
 - **Live-verified** against yfinance (AAPL), FRED (CPIAUCSL), and SEC EDGAR
   (Apple CIK 320193 → 505 XBRL tags). Cache hit / as-of / degraded confirmed.
 - F1NANCE commits on `main` (pushed; `main == fork/main`):
@@ -59,11 +64,13 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
   - `5238eed9a` — `docs(f1nance): record Phase-2 commit hash in HANDOFF`
   - `108e1573b` — `feat(f1nance): add Phase-3 quant and backtesting engine`
   - `2de11389b` — `docs(f1nance): record Phase-3 commit hash and state in HANDOFF`
+  - `119220e2b` — `feat(f1nance): add Phase-4 execution and compliance layer`
 - Upstream `main` moves fast (it advanced repeatedly during this session).
   Re-check `git ls-remote origin HEAD` before claiming "latest". **Not yet
   rebased** — commit Phase work first, then rebase as a separate step.
-- 7 finance skills under `f1nance/skills/`; `market-data`,
-  `portfolio-management`, and `quant-methods` now v0.2.0.
+- 8 finance skills under `f1nance/skills/`; `market-data`,
+  `portfolio-management`, and `quant-methods` at v0.2.0, `execution-trading`
+  new at v0.1.0.
 
 ## Skills (canonical source: `f1nance/skills/`)
 
@@ -71,9 +78,9 @@ not the body. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` →
 `f1nance/data` layer), `portfolio-management` (v0.2.0 — backed by the
 `f1nance/portfolio` engine), `valuation`,
 `financial-statement-analysis`, `macro-analysis`, `quant-methods` (v0.2.0 —
-backed by the `f1nance/quant` engine). Roadmap
-additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`,
-`execution-trading`.
+backed by the `f1nance/quant` engine), `execution-trading` (v0.1.0 — backed
+by the `f1nance/execution` engine). Roadmap
+additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`.
 
 ## Quirks & lessons (save a fresh session the pain)
 
@@ -99,14 +106,15 @@ additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`,
 
 ## Next steps (pick up here)
 
-1. **Phase 4 — execution & compliance**: `execution-trading` skill (broker/API
-   wiring, paper first, order types, slippage and market-impact awareness) and
-   a compliance/trade-log layer that mirrors every decision with its rationale
-   and confidence — the audit trail. Built on the data + portfolio + quant
-   layers in `f1nance/`.
-2. Phase 5 — the desk (multi-agent). … through Phase 6 — independence.
-3. Optionally rebase upstream (`git fetch origin && git rebase origin/main`)
+1. **Phase 5 — the desk (multi-agent)**: spawn specialized subagents per
+   domain (a virtual desk: PM, trader, quant, banker, CFO) coordinated by the
+   umbrella harness, plus a store-first evolution loop in `f1nance/` (memory +
+   decisions as append-only provenance) so the profile stays a derived view
+   and the repo stays the body. Then Phase 6 — independence.
+2. Optionally rebase upstream (`git fetch origin && git rebase origin/main`)
    as a separate step from feature work.
+3. Re-project repo → profile after editing `f1nance/` skills (see Resume
+   commands) so the new `execution-trading` skill is live in the runtime.
 
 ## Resume commands
 
@@ -129,6 +137,12 @@ f1nance/.venv/bin/python -m f1nance.quant capm spec.json
 f1nance/.venv/bin/python -m f1nance.quant ff spec.json
 f1nance/.venv/bin/python -m f1nance.quant backtest spec.json
 f1nance/.venv/bin/python -m f1nance.quant momentum spec.json
+
+# execution & compliance layer
+f1nance/.venv/bin/python -m f1nance.execution order spec.json
+f1nance/.venv/bin/python -m f1nance.execution impact spec.json
+f1nance/.venv/bin/python -m f1nance.execution ledger spec.json --out ledger.jsonl
+f1nance/.venv/bin/python -m f1nance.execution export ledger.jsonl
 
 # re-project repo → profile after editing f1nance/ skills
 cp f1nance/SOUL.md ~/.hermes/profiles/f1nance/SOUL.md
