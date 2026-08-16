@@ -63,24 +63,33 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   The DeepSeek `tool_calls` wire shape matches `parse_tool_calls`; the loop
   dispatches, feeds results back, and settles. Run:
   `f1nance/.venv/bin/python -m f1nance.agent chat -q "…"`.
-- F1NANCE commits on `main` (pushed; `main == fork/main`):
-  - `bc552421a` — `feat(f1nance): found the sovereign financial-agent harness`
-  - `4b6ab5345` — `docs(f1nance): make the end-state explicit — F1NANCE leaves Hermes…`
-  - `1d3021d7f` — `docs(f1nance): add HANDOFF.md for fresh-session pickup`
-  - `a30c999e5` — `feat(f1nance): add Phase-1 data substrate (fetch/cache layer + tests)`
-  - `f66e24852` — `docs(f1nance): mark Phase 1 complete; refresh skill/roadmap/handoff`
-  - `ce501ceb3` — `docs(f1nance): finalize HANDOFF for fresh-session pickup (Phase 2 ready)`
-  - `660587344` — `feat(f1nance): add Phase-2 portfolio and risk engine`
-  - `5238eed9a` — `docs(f1nance): record Phase-2 commit hash in HANDOFF`
-  - `108e1573b` — `feat(f1nance): add Phase-3 quant and backtesting engine`
-  - `2de11389b` — `docs(f1nance): record Phase-3 commit hash and state in HANDOFF`
-  - `119220e2b` — `feat(f1nance): add Phase-4 execution and compliance layer`
-  - `4638fba7e` — `feat(f1nance): add Phase-5 desk (multi-agent) + store-first core`
-  - `7f9fe4c3e` — `feat(f1nance): add desk live executor (Hermes-free model call) + live CLI`
-  - `f384ebca2` — `feat(f1nance): add Phase-6 standalone agent runtime (no Hermes)`
+- F1NANCE commits on `main` (pushed; `main == fork/main`). **Rebased onto
+  upstream `main` (`9c58a78a7`) on 2026-08-16** — all SHAs below are the
+  post-rebase values; new `main` head is `7bb76acf2`:
+  - `5c9dfbc80` — `feat(f1nance): found the sovereign financial-agent harness`
+  - `75eafdde9` — `docs(f1nance): make the end-state explicit — F1NANCE leaves Hermes…`
+  - `87736c2ad` — `docs(f1nance): add HANDOFF.md for fresh-session pickup`
+  - `9b007acaa` — `feat(f1nance): add Phase-1 data substrate (fetch/cache layer + tests)`
+  - `7ce30d61f` — `docs(f1nance): mark Phase 1 complete; refresh skill/roadmap/handoff`
+  - `c11e9e295` — `docs(f1nance): finalize HANDOFF for fresh-session pickup (Phase 2 ready)`
+  - `272bb13b8` — `feat(f1nance): add Phase-2 portfolio and risk engine`
+  - `545bae222` — `docs(f1nance): record Phase-2 commit hash in HANDOFF`
+  - `332742404` — `feat(f1nance): add Phase-3 quant and backtesting engine`
+  - `5a3f70f88` — `docs(f1nance): record Phase-3 commit hash and state in HANDOFF`
+  - `a87acf3f0` — `docs(f1nance): complete the HANDOFF commit lineage`
+  - `a051851c2` — `feat(f1nance): add Phase-4 execution and compliance layer`
+  - `9759cdb85` — `docs(f1nance): record Phase-4 commit hash and state in HANDOFF`
+  - `9cc80d381` — `docs(f1nance): note terminal guard workaround in HANDOFF quirks`
+  - `e94eff54d` — `feat(f1nance): add Phase-5 desk (multi-agent) + store-first core`
+  - `ad65e2a6a` — `docs(f1nance): record Phase-5 commit hash and state in HANDOFF`
+  - `8ba9d94d6` — `feat(f1nance): add desk live executor (Hermes-free model call) + live CLI`
+  - `deb81f93c` — `docs(f1nance): record desk live executor in HANDOFF`
+  - `2ffc095b7` — `feat(f1nance): add Phase-6 standalone agent runtime (no Hermes)`
+  - `d511f5034` — `docs(f1nance): record Phase-6 commit hash and state in HANDOFF`
+  - `7bb76acf2` — `docs(f1nance): record live verification of Phase-6 agent loop in HANDOFF`
 - Upstream `main` moves fast. Re-check `git ls-remote origin HEAD` before
-  claiming "latest". **Not yet rebased** — commit Phase work first, then rebase
-  as a separate step.
+  claiming "latest". Rebased 2026-08-16; re-rebase when upstream advances
+  again, as a separate step from feature work.
 - 8 finance skills under `f1nance/skills/`; `market-data`,
   `portfolio-management`, and `quant-methods` at v0.2.0, `execution-trading`
   at v0.1.0. The `desk`, `core`, and `agent` packages are engines/runtime, not
@@ -140,8 +149,10 @@ additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`.
    shape matches `parse_tool_calls`. See Current state above.
 2. **Retire the Hermes profile** when 1deat0r confirms the standalone runtime
    is primary — the profile stays as a bootstrap fallback until then.
-3. Optionally rebase upstream (`git fetch origin && git rebase origin/main`)
-   as a separate step from feature work.
+3. ✅ Rebased onto upstream `main` (`9c58a78a7`) 2026-08-16, then
+   `git push --force-with-lease fork main` (329 tests re-green after rebase).
+   Re-rebase when upstream advances again, as a separate step from feature
+   work.
 4. Re-project repo → profile after editing `f1nance/` skills (see Resume
    commands) — only relevant while the profile is still in use.
 
