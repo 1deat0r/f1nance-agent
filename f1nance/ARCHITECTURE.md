@@ -47,6 +47,7 @@ domain, not to a persona.
 | Orders, execution costs, trade log | `execution-trading` skill | `f1nance/execution` engine (stdlib) |
 | Bond pricing, yield curves, duration | `fixed-income` skill | `f1nance/fixed_income` engine (stdlib) |
 | Options pricing, Greeks, implied vol | `derivatives` skill | `f1nance/derivatives` engine (stdlib) |
+| Limits, stress tests, VaR backtesting | `risk-management` skill | `f1nance/risk_management` engine (stdlib) |
 
 ## The guardrail layer (cross-cutting, always on)
 
@@ -81,7 +82,7 @@ every task, in every domain:
 | `m-and-a` (deal process & structuring) | IB | 🗓️ roadmap |
 | `fixed-income` (bonds, yield curves, credit) | Markets & Trading, Quant, Asset Mgmt | ✅ v0.1.0 |
 | `derivatives` (options pricing, greeks, hedging) | Quant, Trading | ✅ v0.1.0 |
-| `risk-management` (VaR, stress, limits) | All | 🗓️ roadmap |
+| `risk-management` (VaR, stress, limits) | All | ✅ v0.1.0 |
 | `execution-trading` (orders, costs, trade log) | Trading, all | ✅ v0.1.0 |
 
 ## The native core (`f1nance/`) vs. the Hermes profile

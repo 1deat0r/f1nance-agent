@@ -223,10 +223,14 @@ class RegistryTest(_TempStore):
         self.assertIn("derivatives_greeks", names)
         self.assertIn("derivatives_implied_vol", names)
         self.assertIn("derivatives_binomial", names)
+        self.assertIn("riskmanagement_limits", names)
+        self.assertIn("riskmanagement_stress", names)
+        self.assertIn("riskmanagement_reverse_stress", names)
+        self.assertIn("riskmanagement_var_backtest", names)
         self.assertIn("execution_order", names)
         self.assertIn("desk_run", names)
         self.assertIn("memory_record", names)
-        self.assertEqual(len(names), 26)
+        self.assertEqual(len(names), 30)
 
     def test_schemas_are_well_formed(self):
         for schema in self._registry().schemas():
@@ -401,6 +405,52 @@ class DerivativesToolTest(_TempStore):
                  "r": 0.05, "sigma": 0.0},
             )
         )
+        self.assertIn("error", out)
+
+
+class RiskManagementToolTest(_TempStore):
+    def test_limits(self):
+        spec = {
+            "limits": [{"name": "gross", "metric": "max_gross_exposure", "threshold": 1.5}],
+            "metrics": {"max_gross_exposure": 1.8},
+        }
+        out = json.loads(self._registry().dispatch("riskmanagement_limits", {"spec": spec}))
+        self.assertEqual(out["breach_count"], 1)
+        self.assertEqual(out["breached"], ["gross"])
+        self.assertTrue(out["results"][0]["breached"])
+
+    def test_stress(self):
+        spec = {
+            "exposures": {"equity": 3_000_000.0},
+            "nav": 5_000_000.0,
+            "scenarios": [{"name": "crash", "shocks": {"equity": -0.30}}],
+        }
+        out = json.loads(self._registry().dispatch("riskmanagement_stress", {"spec": spec}))
+        self.assertAlmostEqual(out["scenarios"][0]["pnl"], -900_000.0)
+        self.assertAlmostEqual(out["scenarios"][0]["pnl_pct"], -0.18)
+
+    def test_reverse_stress(self):
+        spec = {"exposures": {"equity": 3_000_000.0}, "factor": "equity", "target_loss": 600_000.0}
+        out = json.loads(self._registry().dispatch("riskmanagement_reverse_stress", {"spec": spec}))
+        self.assertAlmostEqual(out["shock"], -0.20)
+
+    def test_var_backtest(self):
+        var = [0.05] * 100
+        returns = [-0.10] * 8 + [0.01] * 92
+        out = json.loads(
+            self._registry().dispatch(
+                "riskmanagement_var_backtest",
+                {"var_forecasts": var, "realized_returns": returns},
+            )
+        )
+        self.assertEqual(out["exceptions"], 8)
+        self.assertAlmostEqual(out["kupiec_lr"], 1.615808, places=5)
+        self.assertFalse(out["kupiec_reject"])
+
+    def test_limits_error_is_honest(self):
+        spec = {"limits": [{"name": "gross", "metric": "missing", "threshold": 1.5}],
+                "metrics": {}}
+        out = json.loads(self._registry().dispatch("riskmanagement_limits", {"spec": spec}))
         self.assertIn("error", out)
 
 

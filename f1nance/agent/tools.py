@@ -57,6 +57,14 @@ from ..fixed_income import (
     ytm,
 )
 from ..derivatives import black_scholes, binomial_price, greeks, implied_volatility
+from ..risk_management import (
+    Limit,
+    Scenario,
+    check_limits,
+    reverse_stress,
+    stress_test,
+    var_backtest,
+)
 from ..quant.backtest import backtest_weights, walk_forward
 from ..quant.factors import capm, momentum_predictor, multi_factor
 from .paths import default_store_path
@@ -554,6 +562,53 @@ def h_derivatives_binomial(args: dict) -> str:
     )
 
 
+# -- risk management ---------------------------------------------------------
+
+def _exposures(spec: dict) -> dict:
+    return {str(k): float(v) for k, v in spec["exposures"].items()}
+
+
+def h_riskmanagement_limits(args: dict) -> str:
+    spec = args["spec"]
+    limits = [Limit(**l) for l in spec["limits"]]
+    metrics = {str(k): float(v) for k, v in spec["metrics"].items()}
+    return _json(asdict(check_limits(limits, metrics)))
+
+
+def h_riskmanagement_stress(args: dict) -> str:
+    spec = args["spec"]
+    nav = float(spec["nav"]) if spec.get("nav") is not None else None
+    outcomes = stress_test(
+        _exposures(spec),
+        [Scenario(**s) for s in spec["scenarios"]],
+        nav=nav,
+    )
+    return _json({"nav": nav, "scenarios": [asdict(o) for o in outcomes]})
+
+
+def h_riskmanagement_reverse_stress(args: dict) -> str:
+    spec = args["spec"]
+    return _json(
+        asdict(
+            reverse_stress(
+                _exposures(spec),
+                str(spec["factor"]),
+                float(spec["target_loss"]),
+            )
+        )
+    )
+
+
+def h_riskmanagement_var_backtest(args: dict) -> str:
+    result = var_backtest(
+        [float(v) for v in args["var_forecasts"]],
+        [float(r) for r in args["realized_returns"]],
+        confidence=float(args.get("confidence", 0.95)),
+        significance=float(args.get("significance", 0.05)),
+    )
+    return _json(asdict(result))
+
+
 # -- the registry ------------------------------------------------------------
 
 @dataclass(frozen=True)
@@ -963,6 +1018,54 @@ def build_registry(
                 },
             ),
             h_derivatives_binomial,
+        ),
+        # risk management
+        Tool(
+            "riskmanagement_limits",
+            "Check named risk limits (max/min thresholds) against current "
+            "metrics and report breaches, utilization, and headroom.",
+            _spec_param(
+                "Limits spec: {limits: [{name, metric, threshold, direction: "
+                "'max'|'min'}], metrics: {metric: current_value}}."
+            ),
+            h_riskmanagement_limits,
+        ),
+        Tool(
+            "riskmanagement_stress",
+            "Scenario stress test: apply factor return shocks to a "
+            "portfolio's exposures and report the P&L per scenario.",
+            _spec_param(
+                "Stress spec: {exposures: {factor: net_exposure_currency}, "
+                "scenarios: [{name, shocks: {factor: return_shock}}], "
+                "optional nav (enables pnl_pct)}."
+            ),
+            h_riskmanagement_stress,
+        ),
+        Tool(
+            "riskmanagement_reverse_stress",
+            "Reverse stress test: solve the single-factor shock that produces "
+            "exactly a target loss.",
+            _spec_param(
+                "Reverse-stress spec: {exposures: {factor: net_exposure}, "
+                "factor, target_loss (positive loss magnitude)}."
+            ),
+            h_riskmanagement_reverse_stress,
+        ),
+        Tool(
+            "riskmanagement_var_backtest",
+            "Backtest VaR forecasts against realized returns (Kupiec "
+            "proportion-of-failures + Christoffersen independence/conditional "
+            "coverage, each with a p-value).",
+            _scalar_params(
+                ["var_forecasts", "realized_returns"],
+                {
+                    "var_forecasts": {"type": "array", "items": {"type": "number"}, "description": "VaR loss thresholds per period (positive)"},
+                    "realized_returns": {"type": "array", "items": {"type": "number"}, "description": "Signed period returns, aligned with var_forecasts"},
+                    "confidence": {"type": "number", "description": "VaR confidence (default 0.95)"},
+                    "significance": {"type": "number", "description": "Rejection threshold (default 0.05)"},
+                },
+            ),
+            h_riskmanagement_var_backtest,
         ),
         # execution & compliance
         Tool(

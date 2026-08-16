@@ -9,7 +9,7 @@ metadata:
   hermes:
     tags: [finance, harness, routing, guardrails, advisory, risk]
     category: finance
-    related_skills: [market-data, valuation, portfolio-management, financial-statement-analysis, macro-analysis, quant-methods, execution-trading, fixed-income]
+    related_skills: [market-data, valuation, portfolio-management, financial-statement-analysis, macro-analysis, quant-methods, execution-trading, fixed-income, derivatives, risk-management]
 ---
 
 # F1NANCE Harness Manual
@@ -43,9 +43,11 @@ or a number goes through this manual's guardrails.
 | Books, statements, close, FP&A, cash, capital | Corporate Finance & Accounting | financial-statement-analysis |
 | Rates, FX, credit, inflation, central banks | Markets & Trading (Macro) | macro-analysis |
 | Bonds, yield curves, duration, forward rates | Markets & Trading (Rates), Quant, Asset Mgmt | fixed-income (+ macro-analysis for term premium) |
+| Options, volatility, greeks, hedging | Markets & Trading (Vol), Quant | derivatives |
 | Equity ideas, single names, sectors, flow | Markets & Trading (Equities) | valuation + market-data |
 | Company worth, deals, structuring, process | Investment Banking | valuation (+ m-and-a when built) |
 | Portfolio build/manage, risk, attribution | Asset Management | portfolio-management |
+| Risk limits, stress tests, VaR validation | Asset Mgmt, Trading, all | risk-management (+ portfolio-management for the VaR numbers) |
 | Models, stats, backtests, pricing | Quantitative | quant-methods |
 | Order routing, execution mechanics, costs, trade log | Trading (execution) | execution-trading |
 

@@ -160,6 +160,34 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
 - 34 offline unit tests added (404 total, all green); `price`/`greeks`/
   `implied_vol`/`binomial` CLI with JSON output.
 
+## Phase 9 — Risk management ✅
+
+- `f1nance/risk_management/` engine, stdlib-only (no numpy, no Hermes):
+  - `limits` — named risk limits (max/min thresholds) checked against current
+    metrics, with breach / headroom / utilization reported. A limit that
+    references a metric the caller did not supply **raises** rather than
+    fabricating a pass — a missing number is a limit not checked.
+  - `stress` — scenario stress testing (linear factor shocks → P&L per
+    scenario, with the worst contributor named) and reverse stress testing
+    (solve the single-factor shock that produces a target loss, signed
+    correctly for long vs short exposure).
+  - `backtest` — VaR backtesting: the Kupiec proportion-of-failures test and
+    Christoffersen independence / conditional-coverage tests, each a
+    likelihood ratio with a chi-square p-value. An exception is
+    `realized < -var_forecast` (VaR is a positive loss, returns are signed).
+- This is the layer that makes the "risk first" guardrail a *checkable
+  contract* on top of Phase-2 `portfolio/risk` (the VaR/CVaR/vol/drawdown
+  numbers) and Phase-8 Greeks (gamma/vega exposure).
+- Every metric raises on degenerate input (a limit referencing a missing
+  metric, an empty exposure map, a scenario that shocks nothing, a negative
+  VaR forecast, misaligned series) rather than fabricating.
+- `risk-management` skill (v0.1.0) fronting the engine; the standalone agent
+  gained four risk-management tools (`riskmanagement_limits`,
+  `riskmanagement_stress`, `riskmanagement_reverse_stress`,
+  `riskmanagement_var_backtest`) — 30 tools total.
+- 29 offline unit tests added (438 total, all green); `limits`/`stress`/
+  `reverse_stress`/`var_backtest` CLI with JSON output.
+
 ## Principles that survive every phase
 
 - Honesty over confidence. Risk over return. Verified over elegant.
