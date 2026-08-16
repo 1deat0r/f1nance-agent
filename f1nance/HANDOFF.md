@@ -143,17 +143,23 @@ additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`.
 
 ## Next steps (pick up here)
 
-1. **Live-verify the agent loop** ✅ done (2026-08-16): no-tool call, a pure
-   tool call (`portfolio_value`), and a network tool call (`market_price`) all
-   verified live against the real DeepSeek endpoint — the `tool_calls` wire
-   shape matches `parse_tool_calls`. See Current state above.
-2. **Retire the Hermes profile** when 1deat0r confirms the standalone runtime
-   is primary — the profile stays as a bootstrap fallback until then.
-3. ✅ Rebased onto upstream `main` (`9c58a78a7`) 2026-08-16, then
-   `git push --force-with-lease fork main` (329 tests re-green after rebase).
-   Re-rebase when upstream advances again, as a separate step from feature
-   work.
-4. Re-project repo → profile after editing `f1nance/` skills (see Resume
+1. ✅ **Live-verified the agent loop** (2026-08-16) — see Current state above.
+2. ✅ **Rebased onto upstream `main`** (`9c58a78a7`) 2026-08-16; `main ==
+   fork/main` (`9bd29c226`), 329 tests re-green. Re-rebase when upstream
+   advances again, as a separate step from feature work.
+3. **Retire the Hermes profile** (`~/.hermes/profiles/f1nance/`) when 1deat0r
+   confirms the standalone runtime is primary. The profile stays a bootstrap
+   fallback until then — do NOT touch it before 1deat0r says so. Back up the
+   projected SOUL/skills first if anything exists there that isn't already in
+   `f1nance/` (it should all be derived from the repo).
+4. **Phase 7 — pick a roadmap skill with 1deat0r.** The four roadmap skills
+   (`m-and-a`, `fixed-income`, `derivatives`, `risk-management`) are the
+   natural next capability work. Follow the Phase-1–6 pattern: a stdlib-only
+   engine in `f1nance/<domain>/` (CLI + JSON output, `raise` on degenerate
+   input, never fabricate), a fronting SKILL.md, offline unit tests in
+   `f1nance/tests/`, and a clean commit. Re-project to the profile (step 5)
+   only while the profile is still in use.
+5. Re-project repo → profile after editing `f1nance/` skills (see Resume
    commands) — only relevant while the profile is still in use.
 
 ## Resume commands
