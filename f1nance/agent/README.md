@@ -2,8 +2,9 @@
 
 The Phase-6 runtime: F1NANCE as its own agent, no Hermes. This package turns
 the capability engines (data, portfolio, quant, execution, desk, core, fixed
-income) into a single tool-calling agent that runs on its own substrate — its
-own entry point, its own tool registry, its own memory/decision store.
+income, derivatives) into a single tool-calling agent that runs on its own
+substrate — its own entry point, its own tool registry, its own memory/decision
+store.
 
 Hermes-independent by design: standard library only (``urllib`` for the model
 call, ``dataclasses``/``json`` for everything else), no Hermes imports, no
@@ -23,7 +24,7 @@ model (DeepSeek-v4-pro, tool-calling)
    │  └─ tool_calls? ──► ToolRegistry.dispatch ──► engine ──► JSON result
    │                                                     (data/portfolio/quant/
    │                                                      execution/desk/core/
-   │                                                      fixed_income)
+   │                                                      fixed_income/derivatives)
    └─ content? ──► the answer
 ```
 
@@ -39,7 +40,7 @@ rather than inventing an answer.
 |---|---|
 | `paths` | Canonical locations for SOUL.md and the provenance store |
 | `client` | `AgentClient` — chat completions with tool calling over `urllib`; `ToolCall` parsing; the echo/result message helpers |
-| `tools` | `Tool` / `ToolRegistry` and the built-in toolset (22 tools over the seven engines + the store) |
+| `tools` | `Tool` / `ToolRegistry` and the built-in toolset (26 tools over the eight engines + the store) |
 | `system` | The system-prompt builder (SOUL + active store facts + working contract) |
 | `loop` | `Agent` — the tool-calling conversation loop |
 
@@ -51,6 +52,7 @@ rather than inventing an answer.
 | Portfolio & risk | `portfolio_value`, `portfolio_risk`, `portfolio_attribution` |
 | Quant & backtest | `quant_capm`, `quant_ff`, `quant_backtest`, `quant_momentum` |
 | Fixed income | `fixedincome_price`, `fixedincome_ytm`, `fixedincome_risk`, `fixedincome_curve` |
+| Derivatives | `derivatives_price`, `derivatives_greeks`, `derivatives_implied_vol`, `derivatives_binomial` |
 | Execution & compliance | `execution_order`, `execution_impact`, `execution_ledger` |
 | Desk | `desk_run` (five seats, one verdict, live model executor) |
 | Provenance store | `memory_record`, `memory_export`, `memory_retract` |

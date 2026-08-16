@@ -10,8 +10,11 @@ Phase-4 execution & compliance layer (orders, transaction costs, and the
 append-only trade log); the ``desk`` subpackage is the Phase-5 multi-agent
 coordination layer (five seats, one verdict, executor-injected); the ``core``
 subpackage is the Phase-5 store-first evolution loop (provenance-aware
-memory/decision store); and the ``agent`` subpackage is the Phase-6 standalone
-runtime (own entry point, tool registry, and memory substrate — no Hermes).
+memory/decision store); the ``agent`` subpackage is the Phase-6 standalone
+runtime (own entry point, tool registry, and memory substrate — no Hermes);
+the ``fixed_income`` subpackage is the Phase-7 fixed-income engine (bonds,
+yield curves, duration); and the ``derivatives`` subpackage is the Phase-8
+derivatives engine (Black-Scholes, Greeks, implied vol, binomial lattice).
 """
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"

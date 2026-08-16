@@ -136,6 +136,30 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
 - 41 offline unit tests added (370 total, all green); `price`/`ytm`/
   `duration`/`pv`/`pv_curve`/`forward`/`bootstrap` CLI with JSON output.
 
+## Phase 8 — Derivatives ✅
+
+- `f1nance/derivatives/` engine, stdlib-only (no numpy, no scipy, no Hermes):
+  - `black_scholes` — closed-form European pricing (Black-Scholes), the
+    normal CDF/PDF over `math.erf`, closed-form Greeks (delta/gamma/vega/
+    theta/rho — no finite difference), and an implied-volatility solver
+    (bisection) that **raises on a price outside the model's no-arbitrage
+    bounds** (below intrinsic or above the deep-in-the-money limit) rather
+    than fabricating a vol.
+  - `binomial` — a Cox-Ross-Rubinstein lattice for European and American
+    options (early-exercise premium), the honest fallback for payoffs
+    Black-Scholes cannot price closed-form. Raises when the risk-neutral
+    probability leaves `[0, 1]`.
+  - Reuses the continuous-compounding convention from Phase 7 (rates and
+    vol are annualized decimal; time is years).
+- Every metric raises on degenerate input (non-positive spot/strike/time/
+  volatility, `steps < 1`, a price outside the no-arbitrage bounds) rather
+  than fabricating.
+- `derivatives` skill (v0.1.0) fronting the engine; the standalone agent
+  gained four derivatives tools (`derivatives_price`, `derivatives_greeks`,
+  `derivatives_implied_vol`, `derivatives_binomial`) — 26 tools total.
+- 34 offline unit tests added (404 total, all green); `price`/`greeks`/
+  `implied_vol`/`binomial` CLI with JSON output.
+
 ## Principles that survive every phase
 
 - Honesty over confidence. Risk over return. Verified over elegant.

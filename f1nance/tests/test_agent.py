@@ -219,10 +219,14 @@ class RegistryTest(_TempStore):
         self.assertIn("fixedincome_ytm", names)
         self.assertIn("fixedincome_risk", names)
         self.assertIn("fixedincome_curve", names)
+        self.assertIn("derivatives_price", names)
+        self.assertIn("derivatives_greeks", names)
+        self.assertIn("derivatives_implied_vol", names)
+        self.assertIn("derivatives_binomial", names)
         self.assertIn("execution_order", names)
         self.assertIn("desk_run", names)
         self.assertIn("memory_record", names)
-        self.assertEqual(len(names), 22)
+        self.assertEqual(len(names), 26)
 
     def test_schemas_are_well_formed(self):
         for schema in self._registry().schemas():
@@ -340,6 +344,64 @@ class ExecutionToolTest(_TempStore):
         self.assertEqual(out["status"], "pending")
         import os as _os
         self.assertTrue(_os.path.exists(path))
+
+
+class DerivativesToolTest(_TempStore):
+    def test_price(self):
+        out = json.loads(
+            self._registry().dispatch(
+                "derivatives_price",
+                {"call_put": "call", "S": 42, "K": 40, "T": 0.5,
+                 "r": 0.10, "sigma": 0.20},
+            )
+        )
+        self.assertAlmostEqual(out["price"], 4.759422, places=5)
+        self.assertEqual(out["call_put"], "call")
+
+    def test_greeks(self):
+        out = json.loads(
+            self._registry().dispatch(
+                "derivatives_greeks",
+                {"call_put": "put", "S": 100, "K": 100, "T": 1,
+                 "r": 0.05, "sigma": 0.20},
+            )
+        )
+        self.assertIn("delta", out)
+        self.assertIn("gamma", out)
+        self.assertIn("vega", out)
+        self.assertIn("theta", out)
+        self.assertIn("rho", out)
+
+    def test_implied_vol(self):
+        out = json.loads(
+            self._registry().dispatch(
+                "derivatives_implied_vol",
+                {"price": 10.450584, "call_put": "call", "S": 100, "K": 100,
+                 "T": 1, "r": 0.05},
+            )
+        )
+        self.assertAlmostEqual(out["implied_volatility"], 0.20, places=5)
+
+    def test_binomial_american(self):
+        out = json.loads(
+            self._registry().dispatch(
+                "derivatives_binomial",
+                {"call_put": "put", "S": 42, "K": 40, "T": 0.5, "r": 0.10,
+                 "sigma": 0.20, "steps": 200, "american": True},
+            )
+        )
+        self.assertTrue(out["american"])
+        self.assertGreater(out["price"], 0.0)
+
+    def test_price_error_is_honest(self):
+        out = json.loads(
+            self._registry().dispatch(
+                "derivatives_price",
+                {"call_put": "call", "S": 100, "K": 100, "T": 1,
+                 "r": 0.05, "sigma": 0.0},
+            )
+        )
+        self.assertIn("error", out)
 
 
 class MemoryToolTest(_TempStore):

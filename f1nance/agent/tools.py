@@ -56,6 +56,7 @@ from ..fixed_income import (
     pv_curve,
     ytm,
 )
+from ..derivatives import black_scholes, binomial_price, greeks, implied_volatility
 from ..quant.backtest import backtest_weights, walk_forward
 from ..quant.factors import capm, momentum_predictor, multi_factor
 from .paths import default_store_path
@@ -488,6 +489,71 @@ def h_fixedincome_curve(args: dict) -> str:
     )
 
 
+# -- derivatives -------------------------------------------------------------
+
+def h_derivatives_price(args: dict) -> str:
+    result = black_scholes(
+        str(args["call_put"]),
+        float(args["S"]),
+        float(args["K"]),
+        float(args["T"]),
+        float(args.get("r", 0.0)),
+        float(args["sigma"]),
+        q=float(args.get("q", 0.0)),
+    )
+    return _json({"call_put": str(args["call_put"]).lower(), **asdict(result)})
+
+
+def h_derivatives_greeks(args: dict) -> str:
+    result = greeks(
+        str(args["call_put"]),
+        float(args["S"]),
+        float(args["K"]),
+        float(args["T"]),
+        float(args.get("r", 0.0)),
+        float(args["sigma"]),
+        q=float(args.get("q", 0.0)),
+    )
+    return _json({"call_put": str(args["call_put"]).lower(), **asdict(result)})
+
+
+def h_derivatives_implied_vol(args: dict) -> str:
+    return _json(
+        {
+            "implied_volatility": implied_volatility(
+                float(args["price"]),
+                str(args["call_put"]),
+                float(args["S"]),
+                float(args["K"]),
+                float(args["T"]),
+                float(args.get("r", 0.0)),
+                q=float(args.get("q", 0.0)),
+            )
+        }
+    )
+
+
+def h_derivatives_binomial(args: dict) -> str:
+    return _json(
+        {
+            "call_put": str(args["call_put"]).lower(),
+            "price": binomial_price(
+                str(args["call_put"]),
+                float(args["S"]),
+                float(args["K"]),
+                float(args["T"]),
+                float(args.get("r", 0.0)),
+                float(args["sigma"]),
+                q=float(args.get("q", 0.0)),
+                steps=int(args.get("steps", 200)),
+                american=bool(args.get("american", False)),
+            ),
+            "steps": int(args.get("steps", 200)),
+            "american": bool(args.get("american", False)),
+        }
+    )
+
+
 # -- the registry ------------------------------------------------------------
 
 @dataclass(frozen=True)
@@ -822,6 +888,81 @@ def build_registry(
                 "optional compounding (periods/year or 'continuous')."
             ),
             h_fixedincome_curve,
+        ),
+        # derivatives
+        Tool(
+            "derivatives_price",
+            "Black-Scholes European option value (call or put) given spot, "
+            "strike, time, rate, vol, and dividend yield.",
+            _scalar_params(
+                ["call_put", "S", "K", "T", "sigma"],
+                {
+                    "call_put": {"type": "string", "description": "'call' or 'put'"},
+                    "S": {"type": "number", "description": "Spot price"},
+                    "K": {"type": "number", "description": "Strike price"},
+                    "T": {"type": "number", "description": "Time to expiry in years"},
+                    "sigma": {"type": "number", "description": "Annualized volatility, e.g. 0.20"},
+                    "r": {"type": "number", "description": "Risk-free rate (continuous, default 0)"},
+                    "q": {"type": "number", "description": "Dividend yield (default 0)"},
+                },
+            ),
+            h_derivatives_price,
+        ),
+        Tool(
+            "derivatives_greeks",
+            "Closed-form Black-Scholes Greeks (delta, gamma, vega, theta, rho).",
+            _scalar_params(
+                ["call_put", "S", "K", "T", "sigma"],
+                {
+                    "call_put": {"type": "string", "description": "'call' or 'put'"},
+                    "S": {"type": "number"},
+                    "K": {"type": "number"},
+                    "T": {"type": "number", "description": "Years to expiry"},
+                    "sigma": {"type": "number", "description": "Annualized volatility"},
+                    "r": {"type": "number", "description": "Risk-free rate (default 0)"},
+                    "q": {"type": "number", "description": "Dividend yield (default 0)"},
+                },
+            ),
+            h_derivatives_greeks,
+        ),
+        Tool(
+            "derivatives_implied_vol",
+            "Solve the volatility implied by a market option price (bisection; "
+            "raises if the price violates no-arbitrage bounds).",
+            _scalar_params(
+                ["price", "call_put", "S", "K", "T"],
+                {
+                    "price": {"type": "number", "description": "Market option price"},
+                    "call_put": {"type": "string", "description": "'call' or 'put'"},
+                    "S": {"type": "number"},
+                    "K": {"type": "number"},
+                    "T": {"type": "number", "description": "Years to expiry"},
+                    "r": {"type": "number", "description": "Risk-free rate (default 0)"},
+                    "q": {"type": "number", "description": "Dividend yield (default 0)"},
+                },
+            ),
+            h_derivatives_implied_vol,
+        ),
+        Tool(
+            "derivatives_binomial",
+            "Cox-Ross-Rubinstein binomial price (European, or American with "
+            "early exercise) — the fallback for payoffs Black-Scholes cannot "
+            "price closed-form.",
+            _scalar_params(
+                ["call_put", "S", "K", "T", "sigma"],
+                {
+                    "call_put": {"type": "string", "description": "'call' or 'put'"},
+                    "S": {"type": "number"},
+                    "K": {"type": "number"},
+                    "T": {"type": "number", "description": "Years to expiry"},
+                    "sigma": {"type": "number", "description": "Annualized volatility"},
+                    "r": {"type": "number", "description": "Risk-free rate (default 0)"},
+                    "q": {"type": "number", "description": "Dividend yield (default 0)"},
+                    "steps": {"type": "integer", "description": "Tree steps (default 200)"},
+                    "american": {"type": "boolean", "description": "Allow early exercise (default false)"},
+                },
+            ),
+            h_derivatives_binomial,
         ),
         # execution & compliance
         Tool(
