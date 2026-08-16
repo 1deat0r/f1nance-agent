@@ -4,6 +4,19 @@ Session-state for a fresh session with **no context**. Read this first, then
 **verify against the repo** (`git log`, file tree) rather than trusting it
 blindly — recollection is unreliable, the body is not.
 
+## Fresh-session kickoff
+
+The build is complete: Phases 0–11 delivered and live-verified, the Hermes
+profile retired, 502 tests green, `main == fork/main`. Paste this into a fresh
+session to resume:
+
+> Continue the F1NANCE handoff. Verify against the repo — `git log --oneline
+> -5`, `git status`, and `f1nance/.venv/bin/python -m unittest discover -s
+> f1nance/tests` (expect 502 green) — then surface the open loop: the next
+> move is 1deat0r's call (a deal-process/negotiation layer, a dividend-recap
+> LBO extension, or a fresh upstream re-rebase). Do not start a new engine
+> without 1deat0r picking.
+
 ## What F1NANCE is
 
 A sovereign financial-agent harness, hard-forked from NousResearch/hermes-agent.
@@ -51,9 +64,10 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
     rather than inventing.
   - `__main__` — entry point: interactive REPL, `chat -q "…"`, `--list-tools`,
     `--system`.
-- **471 offline unit tests** (`f1nance/tests/`; 438 pre-Phase-10 + 28 in
-  `test_m_and_a.py` + 5 M&A tool tests in `test_agent.py`), all green:
-  `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
+- **502 offline unit tests** (`f1nance/tests/`), all green:
+  `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`. The count
+  grew 471 → 496 (Phase-11 deal-memo) → 502 (profile-retirement `env.py`
+  loader + key-wiring tests).
 - **Phase 7 — fixed-income engine** (`f1nance/fixed_income/`), stdlib-only,
   raise-on-degenerate, never fabricates:
   - `curves` — discount factors, spot/forward rates, present value (flat +
@@ -299,7 +313,7 @@ them (valuation → M&A → risk) into one scored verdict.
 # standalone agent (Phase 6 — the primary interface now)
 cd "/home/mustbearn/Projects/AI Agents/F1NANCE Agent"
 f1nance/.venv/bin/python -m f1nance.agent                 # interactive REPL
-f1nance/.venv/bin/python -m f1nance.agent chat -q "value NVDA"   # one-shot (needs key)
+f1nance/.venv/bin/python -m f1nance.agent chat -q "value NVDA"   # one-shot (key auto-loads)
 f1nance/.venv/bin/python -m f1nance.agent --list-tools    # dump 35 tool schemas
 f1nance/.venv/bin/python -m f1nance.agent --system        # print the system prompt
 
