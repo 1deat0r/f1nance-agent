@@ -172,8 +172,9 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   → `OK` with the profile gone.
 - F1NANCE commits on `main` (pushed; `main == fork/main`). **Rebased onto
   upstream `main` (`460d34564`) on 2026-08-16** — all SHAs below are the
-  post-rebase values; the Phase-11 feature commit is `fd616f5e3` (the
-  `docs` commit recording this handoff becomes the new head):
+  post-rebase values; the Phase-11 feature commit is `fd616f5e3` and the
+  profile retirement is `0af204838` (the `docs` commit recording this
+  handoff becomes the new head):
   - `85237a1c8` — `feat(f1nance): found the sovereign financial-agent harness`
   - `64c9481d7` — `docs(f1nance): make the end-state explicit — F1NANCE leaves Hermes…`
   - `1d93c2b5c` — `docs(f1nance): add HANDOFF.md for fresh-session pickup`
@@ -207,6 +208,7 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   - `713ddf1cd` — `docs(f1nance): record Phase-9 commit hash and state in HANDOFF`
   - `07ad69024` — `feat(f1nance): add Phase-10 M&A engine (accretion/dilution, synergies, LBO)`
   - `fd616f5e3` — `feat(f1nance): add Phase-11 deal-memo pipeline (valuation -> M&A -> risk, one verdict)`
+  - `0af204838` — `feat(f1nance): retire the Hermes bootstrap profile (own the key via f1nance/.env)`
 - Upstream `main` moves fast. Re-check `git ls-remote origin HEAD` before
   claiming "latest". Rebased this session: `d5773bfc3` → `460d34564`
   (2026-08-16); re-rebase when upstream advances again, as a separate step
