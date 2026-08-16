@@ -35,8 +35,9 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
 ## Current state (verified this session)
 
 - **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅, Phase 5 ✅,
-  Phase 6 ✅, Phase 7 ✅.** Phase 6 shipped the `f1nance/agent/` standalone
-  runtime (see `f1nance/agent/README.md`): stdlib-only, no Hermes imports —
+  Phase 6 ✅, Phase 7 ✅, Phase 8 ✅.** Phase 6 shipped the `f1nance/agent/`
+  standalone runtime (see `f1nance/agent/README.md`): stdlib-only, no Hermes
+  imports —
   - `client` — `AgentClient`, an OpenAI-compatible chat-completions client
     with tool calling over stdlib `urllib` (reuses the desk's `ModelError`
     and DeepSeek defaults; strips `reasoning_content` on echo-back).
@@ -49,8 +50,9 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
     rather than inventing.
   - `__main__` — entry point: interactive REPL, `chat -q "…"`, `--list-tools`,
     `--system`.
-- **370 offline unit tests** (`f1nance/tests/`; 329 pre-Phase-7 + 41 new in
-  `test_fixed_income.py`), all green:
+- **404 offline unit tests** (`f1nance/tests/`; 329 pre-Phase-7 + 41 in
+  `test_fixed_income.py` + 34 new in `test_derivatives.py` / `test_agent.py`),
+  all green:
   `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
 - **Phase 7 — fixed-income engine** (`f1nance/fixed_income/`), stdlib-only,
   raise-on-degenerate, never fabricates:
@@ -65,6 +67,21 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   (`fixedincome_price`, `fixedincome_ytm`, `fixedincome_risk`,
   `fixedincome_curve`) → 22 total. CLI: `price`/`ytm`/`duration`/`pv`/
   `pv_curve`/`forward`/`bootstrap`.
+- **Phase 8 — derivatives engine** (`f1nance/derivatives/`), stdlib-only,
+  raise-on-degenerate, never fabricates:
+  - `black_scholes` — closed-form European pricing (normal CDF/PDF over
+    `math.erf`), closed-form Greeks (delta/gamma/vega/theta/rho, no finite
+    difference), and an implied-volatility solver (bisection) that **raises
+    on a price outside the model's no-arbitrage bounds** rather than
+    fabricating a vol.
+  - `binomial` — a Cox-Ross-Rubinstein lattice for European and American
+    options (early-exercise premium); raises when the risk-neutral
+    probability leaves `[0, 1]`. Reuses the Phase-7 continuous-compounding
+    convention (rates/vol annualized decimal, time in years).
+  Fronted by the `derivatives` skill (v0.1.0); the agent gained 4 tools
+  (`derivatives_price`, `derivatives_greeks`, `derivatives_implied_vol`,
+  `derivatives_binomial`) → 26 total. CLI: `price`/`greeks`/`implied_vol`/
+  `binomial`.
 - **Desk live executor** (Phase 5) live-verified against the real DeepSeek
   endpoint. **Phase-6 agent loop live-verified end-to-end (2026-08-16)** —
   three live checks against the real DeepSeek endpoint, key loaded from the
@@ -103,14 +120,15 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   - `11b6d77c1` — `docs(f1nance): record upstream rebase (9c58a78a7) in HANDOFF`
   - `8ff4ae75f` — `docs(f1nance): refresh next steps — profile retirement gated, Phase-7 pointer`
   - `c390d4713` — `feat(f1nance): add Phase-7 fixed-income engine (bonds, yield curves, duration)`
+  - `0f24132d4` — `feat(f1nance): add Phase-8 derivatives engine (Black-Scholes, Greeks, binomial)`
 - Upstream `main` moves fast. Re-check `git ls-remote origin HEAD` before
   claiming "latest". Rebases this session: `9c58a78a7` → `d5773bfc3`
   (2026-08-16); re-rebase when upstream advances again, as a separate step
   from feature work.
-- 9 finance skills under `f1nance/skills/`; `market-data`,
-  `portfolio-management`, and `quant-methods` at v0.2.0, `execution-trading`
-  and `fixed-income` at v0.1.0. The `desk`, `core`, `agent`, and
-  `fixed_income` packages are engines/runtime, not skills.
+- 10 finance skills under `f1nance/skills/`; `market-data`,
+  `portfolio-management`, and `quant-methods` at v0.2.0, `execution-trading`,
+  `fixed-income`, and `derivatives` at v0.1.0. The `desk`, `core`, `agent`,
+  `fixed_income`, and `derivatives` packages are engines/runtime, not skills.
 
 ## Skills (canonical source: `f1nance/skills/`)
 
@@ -120,8 +138,9 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
 `financial-statement-analysis`, `macro-analysis`, `quant-methods` (v0.2.0 —
 backed by the `f1nance/quant` engine), `execution-trading` (v0.1.0 — backed
 by the `f1nance/execution` engine), `fixed-income` (v0.1.0 — backed by the
-`f1nance/fixed_income` engine). Roadmap
-additions: `m-and-a`, `derivatives`, `risk-management`.
+`f1nance/fixed_income` engine), `derivatives` (v0.1.0 — backed by the
+`f1nance/derivatives` engine). Roadmap
+additions: `m-and-a`, `risk-management`.
 
 ## Quirks & lessons (save a fresh session the pain)
 
@@ -163,7 +182,7 @@ additions: `m-and-a`, `derivatives`, `risk-management`.
 
 1. ✅ **Live-verified the agent loop** (2026-08-16) — see Current state above.
 2. ✅ **Re-rebased onto upstream `main`** (`d5773bfc3`) 2026-08-16; `main ==
-   fork/main`, 370 tests re-green. Re-rebase when upstream advances again, as
+   fork/main`, 404 tests re-green. Re-rebase when upstream advances again, as
    a separate step from feature work.
 3. ✅ **Phase 7 — fixed income** delivered (2026-08-16): `f1nance/fixed_income/`
    engine + `fixed-income` skill (v0.1.0) + 4 agent tools + 41 tests. 1deat0r
@@ -173,17 +192,17 @@ additions: `m-and-a`, `derivatives`, `risk-management`.
    fallback until then — do NOT touch it before 1deat0r says so. Back up the
    projected SOUL/skills first if anything exists there that isn't already in
    `f1nance/` (it should all be derived from the repo).
-5. **Phase 8 — derivatives (pick made, 2026-08-16).** 1deat0r delegated the
-   roadmap pick; recommendation: **derivatives** next — closed-form options
-   pricing (Black-Scholes, binomial) + Greeks + implied-vol solve, reusing the
-   curve/continuous-compounding math from Phase 7. Runner-up:
-   `risk-management` (limits, stress tests, VaR backtesting — formalizes the
-   "risk first" guardrail on top of Phase-2 `portfolio/risk`); `m-and-a` last
-   (overlaps the existing `valuation` skill). Same pattern: a stdlib-only
-   engine in `f1nance/<domain>/` (CLI + JSON output, `raise` on degenerate
-   input, never fabricate), a fronting SKILL.md, offline unit tests in
-   `f1nance/tests/`, agent tools in `f1nance/agent/tools.py`, and a clean
-   commit. Re-project to the profile (step 6) only while it is still in use.
+5. ✅ **Phase 8 — derivatives** delivered (2026-08-16): `f1nance/derivatives/`
+   engine (Black-Scholes + Greeks + implied vol + binomial lattice) +
+   `derivatives` skill (v0.1.0) + 4 agent tools + 34 tests. Next roadmap
+   pick: **risk-management** (limits, stress tests, VaR backtesting —
+   formalizes the "risk first" guardrail on top of Phase-2 `portfolio/risk`
+   and Phase-8 vega/gamma exposure), then `m-and-a` (overlaps `valuation`).
+   Same pattern: a stdlib-only engine in `f1nance/<domain>/` (CLI + JSON
+   output, `raise` on degenerate input, never fabricate), a fronting
+   SKILL.md, offline unit tests in `f1nance/tests/`, agent tools in
+   `f1nance/agent/tools.py`, and a clean commit. Re-project to the profile
+   (step 6) only while it is still in use.
 6. Re-project repo → profile after editing `f1nance/` skills (see Resume
    commands) — only relevant while the profile is still in use.
 
@@ -224,6 +243,12 @@ f1nance/.venv/bin/python -m f1nance.fixed_income pv spec.json
 f1nance/.venv/bin/python -m f1nance.fixed_income pv_curve spec.json
 f1nance/.venv/bin/python -m f1nance.fixed_income forward spec.json
 f1nance/.venv/bin/python -m f1nance.fixed_income bootstrap spec.json
+
+# derivatives engine
+f1nance/.venv/bin/python -m f1nance.derivatives price spec.json
+f1nance/.venv/bin/python -m f1nance.derivatives greeks spec.json
+f1nance/.venv/bin/python -m f1nance.derivatives implied_vol spec.json
+f1nance/.venv/bin/python -m f1nance.derivatives binomial spec.json
 
 # execution & compliance layer
 f1nance/.venv/bin/python -m f1nance.execution order spec.json
