@@ -188,6 +188,34 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
 - 29 offline unit tests added (438 total, all green); `limits`/`stress`/
   `reverse_stress`/`var_backtest` CLI with JSON output.
 
+## Phase 10 — M&A ✅
+
+- `f1nance/m_and_a/` engine, stdlib-only (no numpy, no Hermes): the
+  deal-mechanics layer that sits on top of the valuation skill (DCF, comps,
+  precedent transactions) — once a target is valued, this prices the *deal*:
+  - `accretion_dilution` — the EPS bridge across a cash/stock merger:
+    pro-forma net income (standalone NIs + tax-affected synergies −
+    tax-affected financing cost) over pro-forma shares, reported as absolute
+    ($/share) and relative (%) accretion. A deal whose cash + stock does not
+    sum to the purchase price **raises** rather than fabricating a bridge.
+  - `synergies` — present-value the run-rate synergies (ramped linearly to
+    full run-rate, then grown in perpetuity at ``r > g``), net of one-time
+    integration costs and the premium paid; plus the break-even run-rate that
+    exactly covers the premium.
+  - `lbo` — a leveraged buyout: sources & uses (equity check is the balancing
+    plug), a year-by-year debt schedule (FCF repays debt; debt floored at zero
+    with excess as cash build), the exit, and the sponsor's MOIC/IRR
+    (closed-form — all FCF repays debt, no interim distributions).
+- Every metric raises on degenerate input (an unbalanced consideration split,
+  a non-positive acquirer share count, ``r <= g``, a non-positive equity check
+  from an over-levered capitalization, a tax rate outside ``[0, 1)``) rather
+  than fabricating.
+- `m-and-a` skill (v0.1.0) fronting the engine; the standalone agent gained
+  four M&A tools (`manda_accretion`, `manda_synergies`, `manda_breakeven`,
+  `manda_lbo`) — 34 tools total.
+- 28 offline unit tests added (471 total, all green); `accretion`/`synergies`/
+  `breakeven`/`lbo` CLI with JSON output.
+
 ## Principles that survive every phase
 
 - Honesty over confidence. Risk over return. Verified over elegant.

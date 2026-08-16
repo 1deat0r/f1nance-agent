@@ -227,10 +227,14 @@ class RegistryTest(_TempStore):
         self.assertIn("riskmanagement_stress", names)
         self.assertIn("riskmanagement_reverse_stress", names)
         self.assertIn("riskmanagement_var_backtest", names)
+        self.assertIn("manda_accretion", names)
+        self.assertIn("manda_synergies", names)
+        self.assertIn("manda_breakeven", names)
+        self.assertIn("manda_lbo", names)
         self.assertIn("execution_order", names)
         self.assertIn("desk_run", names)
         self.assertIn("memory_record", names)
-        self.assertEqual(len(names), 30)
+        self.assertEqual(len(names), 34)
 
     def test_schemas_are_well_formed(self):
         for schema in self._registry().schemas():
@@ -451,6 +455,68 @@ class RiskManagementToolTest(_TempStore):
         spec = {"limits": [{"name": "gross", "metric": "missing", "threshold": 1.5}],
                 "metrics": {}}
         out = json.loads(self._registry().dispatch("riskmanagement_limits", {"spec": spec}))
+        self.assertIn("error", out)
+
+
+class MandAToolTest(_TempStore):
+    def test_accretion(self):
+        out = json.loads(
+            self._registry().dispatch(
+                "manda_accretion",
+                {"acquirer_ni": 500, "acquirer_shares": 100, "target_ni": 120,
+                 "purchase_price": 2000, "cash_portion": 1000, "stock_portion": 1000,
+                 "acquirer_share_price": 50, "tax_rate": 0.25,
+                 "cost_synergies": 80, "new_debt_rate": 0.05},
+            )
+        )
+        self.assertAlmostEqual(out["pro_forma_eps"], 642.5 / 120.0)
+        self.assertAlmostEqual(out["accretion_pct"], 0.070833333, places=5)
+        self.assertTrue(out["accretive"])
+
+    def test_synergies(self):
+        out = json.loads(
+            self._registry().dispatch(
+                "manda_synergies",
+                {"cost_synergies": 100, "tax_rate": 0.25, "discount_rate": 0.10,
+                 "ramp_years": 2, "integration_costs": 50, "premium_paid": 400},
+            )
+        )
+        self.assertAlmostEqual(out["gross_value"], 75.0 * 9.5454545, places=3)
+        self.assertTrue(out["covered"])
+
+    def test_breakeven(self):
+        out = json.loads(
+            self._registry().dispatch(
+                "manda_breakeven",
+                {"premium_paid": 400, "integration_costs": 50, "tax_rate": 0.25,
+                 "discount_rate": 0.10, "ramp_years": 2},
+            )
+        )
+        self.assertAlmostEqual(out["required_cost_synergies"], 62.857143, places=5)
+
+    def test_lbo(self):
+        out = json.loads(
+            self._registry().dispatch(
+                "manda_lbo",
+                {"enterprise_value": 1000, "existing_net_debt": 200, "fees": 30,
+                 "entry_debt": 700, "ebitda_0": 100, "ebitda_growth": 0.05,
+                 "years": 5, "fcf_margin": 0.60, "exit_multiple": 8.0,
+                 "interest_rate": 0.06, "tax_rate": 0.25},
+            )
+        )
+        self.assertAlmostEqual(out["equity_check"], 330.0)
+        self.assertAlmostEqual(out["moic"], 1.599858, places=4)
+        self.assertAlmostEqual(out["irr"], 0.09856, places=4)
+
+    def test_accretion_error_is_honest(self):
+        out = json.loads(
+            self._registry().dispatch(
+                "manda_accretion",
+                {"acquirer_ni": 500, "acquirer_shares": 100, "target_ni": 120,
+                 "purchase_price": 2000, "cash_portion": 900, "stock_portion": 900,
+                 "acquirer_share_price": 50, "tax_rate": 0.25},
+            )
+        )
         self.assertIn("error", out)
 
 

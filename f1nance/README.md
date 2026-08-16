@@ -40,7 +40,7 @@ f1nance/
 ├── ARCHITECTURE.md   # the harness: role taxonomy → capabilities → tools → guardrails
 ├── ROADMAP.md        # phased build plan
 ├── HANDOFF.md        # session-state — read first on wake, then verify against git
-├── VERSION           # 0.10
+├── VERSION           # 0.11
 ├── __init__.py       # native core package root
 ├── data/             # Phase-1 fetch/cache layer (stdlib-first; yfinance optional)
 ├── portfolio/        # Phase-2 portfolio & risk engine (stdlib-only)
@@ -52,6 +52,7 @@ f1nance/
 ├── fixed_income/     # Phase-7 fixed-income engine (stdlib-only)
 ├── derivatives/      # Phase-8 derivatives engine (Black-Scholes, Greeks, lattice)
 ├── risk_management/  # Phase-9 risk-management engine (limits, stress, VaR backtest)
+├── m_and_a/          # Phase-10 M&A engine (accretion/dilution, synergies, LBO)
 ├── tests/            # offline unit tests (unittest; no Hermes, no network)
 └── skills/           # canonical finance skills (SKILL.md each), installed into the profile
     ├── f1nance/                        # umbrella: the harness operating manual
@@ -64,7 +65,8 @@ f1nance/
     ├── execution-trading/              # orders, execution costs, the trade log
     ├── fixed-income/                   # bond pricing, yield curves, duration
     ├── derivatives/                    # options pricing, Greeks, implied volatility
-    └── risk-management/                # risk limits, stress tests, VaR backtesting
+    ├── risk-management/                # risk limits, stress tests, VaR backtesting
+    └── m-and-a/                        # merger accretion, synergies, LBO
 ```
 
 ## Quick start

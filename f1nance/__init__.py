@@ -13,8 +13,11 @@ subpackage is the Phase-5 store-first evolution loop (provenance-aware
 memory/decision store); the ``agent`` subpackage is the Phase-6 standalone
 runtime (own entry point, tool registry, and memory substrate — no Hermes);
 the ``fixed_income`` subpackage is the Phase-7 fixed-income engine (bonds,
-yield curves, duration); and the ``derivatives`` subpackage is the Phase-8
-derivatives engine (Black-Scholes, Greeks, implied vol, binomial lattice).
+yield curves, duration); the ``derivatives`` subpackage is the Phase-8
+derivatives engine (Black-Scholes, Greeks, implied vol, binomial lattice);
+the ``risk_management`` subpackage is the Phase-9 risk-management engine
+(limits, stress tests, VaR backtesting); and the ``m_and_a`` subpackage is
+the Phase-10 M&A engine (accretion/dilution, synergies, LBO).
 """
 
-__version__ = "0.8.0"
+__version__ = "0.11.0"

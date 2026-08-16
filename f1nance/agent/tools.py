@@ -65,6 +65,7 @@ from ..risk_management import (
     stress_test,
     var_backtest,
 )
+from ..m_and_a import accretion_dilution, lbo, synergy_breakeven, synergy_value
 from ..quant.backtest import backtest_weights, walk_forward
 from ..quant.factors import capm, momentum_predictor, multi_factor
 from .paths import default_store_path
@@ -609,6 +610,71 @@ def h_riskmanagement_var_backtest(args: dict) -> str:
     return _json(asdict(result))
 
 
+# -- m-and-a -----------------------------------------------------------------
+
+def h_manda_accretion(args: dict) -> str:
+    result = accretion_dilution(
+        float(args.get("acquirer_ni", 0.0)),
+        float(args["acquirer_shares"]),
+        float(args.get("target_ni", 0.0)),
+        float(args["purchase_price"]),
+        float(args["cash_portion"]),
+        float(args["stock_portion"]),
+        float(args.get("acquirer_share_price", 0.0)),
+        float(args["tax_rate"]),
+        cost_synergies=float(args.get("cost_synergies", 0.0)),
+        revenue_synergies=float(args.get("revenue_synergies", 0.0)),
+        new_debt_rate=float(args.get("new_debt_rate", 0.0)),
+        cash_used=float(args.get("cash_used", 0.0)),
+        cash_yield=float(args.get("cash_yield", 0.0)),
+    )
+    return _json(asdict(result))
+
+
+def h_manda_synergies(args: dict) -> str:
+    result = synergy_value(
+        float(args.get("cost_synergies", 0.0)),
+        float(args.get("revenue_synergies", 0.0)),
+        float(args.get("revenue_margin", 0.0)),
+        float(args["tax_rate"]),
+        float(args["discount_rate"]),
+        int(args["ramp_years"]),
+        float(args.get("integration_costs", 0.0)),
+        float(args["premium_paid"]),
+        growth=float(args.get("growth", 0.0)),
+    )
+    return _json(asdict(result))
+
+
+def h_manda_breakeven(args: dict) -> str:
+    result = synergy_breakeven(
+        float(args["premium_paid"]),
+        float(args.get("integration_costs", 0.0)),
+        float(args["tax_rate"]),
+        float(args["discount_rate"]),
+        int(args["ramp_years"]),
+        growth=float(args.get("growth", 0.0)),
+    )
+    return _json(asdict(result))
+
+
+def h_manda_lbo(args: dict) -> str:
+    result = lbo(
+        float(args["enterprise_value"]),
+        float(args.get("existing_net_debt", 0.0)),
+        float(args.get("fees", 0.0)),
+        float(args["entry_debt"]),
+        float(args["ebitda_0"]),
+        float(args["ebitda_growth"]),
+        int(args["years"]),
+        float(args["fcf_margin"]),
+        float(args["exit_multiple"]),
+        float(args["interest_rate"]),
+        tax_rate=float(args.get("tax_rate", 0.0)),
+    )
+    return _json(asdict(result))
+
+
 # -- the registry ------------------------------------------------------------
 
 @dataclass(frozen=True)
@@ -1066,6 +1132,94 @@ def build_registry(
                 },
             ),
             h_riskmanagement_var_backtest,
+        ),
+        # m-and-a
+        Tool(
+            "manda_accretion",
+            "Accretion/dilution of a merger: pro-forma EPS and the $/% change "
+            "vs the acquirer's standalone EPS, given consideration mix, "
+            "synergies, and financing costs.",
+            _scalar_params(
+                ["acquirer_shares", "purchase_price", "cash_portion",
+                 "stock_portion", "tax_rate"],
+                {
+                    "acquirer_ni": {"type": "number", "description": "Acquirer standalone net income (default 0)"},
+                    "acquirer_shares": {"type": "number", "description": "Acquirer shares outstanding"},
+                    "target_ni": {"type": "number", "description": "Target standalone net income (default 0)"},
+                    "purchase_price": {"type": "number", "description": "Total equity consideration"},
+                    "cash_portion": {"type": "number", "description": "Consideration paid in cash"},
+                    "stock_portion": {"type": "number", "description": "Consideration paid in stock"},
+                    "acquirer_share_price": {"type": "number", "description": "Acquirer share price (needed for stock portion)"},
+                    "tax_rate": {"type": "number", "description": "Marginal tax rate, e.g. 0.25"},
+                    "cost_synergies": {"type": "number", "description": "Pre-tax cost synergies (default 0)"},
+                    "revenue_synergies": {"type": "number", "description": "Pre-tax revenue synergies (default 0)"},
+                    "new_debt_rate": {"type": "number", "description": "Interest rate on debt funding cash (default 0)"},
+                    "cash_used": {"type": "number", "description": "Cash on hand used to fund cash portion (default 0)"},
+                    "cash_yield": {"type": "number", "description": "Forgone yield on cash used (default 0)"},
+                },
+            ),
+            h_manda_accretion,
+        ),
+        Tool(
+            "manda_synergies",
+            "Present-value the run-rate synergies of a merger (ramp + "
+            "perpetuity) and net them against integration costs and the "
+            "premium paid.",
+            _scalar_params(
+                ["tax_rate", "discount_rate", "ramp_years", "premium_paid"],
+                {
+                    "cost_synergies": {"type": "number", "description": "Annual pre-tax cost synergies (default 0)"},
+                    "revenue_synergies": {"type": "number", "description": "Annual pre-tax incremental revenue (default 0)"},
+                    "revenue_margin": {"type": "number", "description": "Operating margin on revenue synergies, e.g. 0.25"},
+                    "tax_rate": {"type": "number", "description": "Tax rate, e.g. 0.25"},
+                    "discount_rate": {"type": "number", "description": "Discount rate, e.g. 0.10"},
+                    "ramp_years": {"type": "integer", "description": "Years to full run-rate"},
+                    "integration_costs": {"type": "number", "description": "One-time integration costs (default 0)"},
+                    "premium_paid": {"type": "number", "description": "Premium above standalone value"},
+                    "growth": {"type": "number", "description": "Perpetuity growth (default 0)"},
+                },
+            ),
+            h_manda_synergies,
+        ),
+        Tool(
+            "manda_breakeven",
+            "Solve the pre-tax run-rate cost synergies required to exactly "
+            "cover a merger's premium and integration costs.",
+            _scalar_params(
+                ["premium_paid", "tax_rate", "discount_rate", "ramp_years"],
+                {
+                    "premium_paid": {"type": "number", "description": "Premium above standalone value"},
+                    "integration_costs": {"type": "number", "description": "One-time integration costs (default 0)"},
+                    "tax_rate": {"type": "number", "description": "Tax rate, e.g. 0.25"},
+                    "discount_rate": {"type": "number", "description": "Discount rate, e.g. 0.10"},
+                    "ramp_years": {"type": "integer", "description": "Years to full run-rate"},
+                    "growth": {"type": "number", "description": "Perpetuity growth (default 0)"},
+                },
+            ),
+            h_manda_breakeven,
+        ),
+        Tool(
+            "manda_lbo",
+            "Leveraged buyout model: sources & uses, a year-by-year debt "
+            "schedule (FCF pays down debt), and the sponsor's exit MOIC/IRR.",
+            _scalar_params(
+                ["enterprise_value", "entry_debt", "ebitda_0", "ebitda_growth",
+                 "years", "fcf_margin", "exit_multiple", "interest_rate"],
+                {
+                    "enterprise_value": {"type": "number", "description": "EV paid for the target"},
+                    "existing_net_debt": {"type": "number", "description": "Target net debt at entry (default 0; negative = net cash)"},
+                    "fees": {"type": "number", "description": "Transaction fees (default 0)"},
+                    "entry_debt": {"type": "number", "description": "Total debt at entry"},
+                    "ebitda_0": {"type": "number", "description": "Entry EBITDA"},
+                    "ebitda_growth": {"type": "number", "description": "Annual EBITDA growth, e.g. 0.05"},
+                    "years": {"type": "integer", "description": "Hold period in years"},
+                    "fcf_margin": {"type": "number", "description": "UFCF as a fraction of EBITDA, e.g. 0.60"},
+                    "exit_multiple": {"type": "number", "description": "Exit EV/EBITDA multiple, e.g. 8.0"},
+                    "interest_rate": {"type": "number", "description": "Interest rate on debt, e.g. 0.06"},
+                    "tax_rate": {"type": "number", "description": "Tax rate for interest shield (default 0)"},
+                },
+            ),
+            h_manda_lbo,
         ),
         # execution & compliance
         Tool(
