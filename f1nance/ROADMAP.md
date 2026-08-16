@@ -117,6 +117,25 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
   docstring mentions — no imports), all six capability domains running on the
   standalone substrate, and 329 offline tests green on both.
 
+## Phase 7 — Fixed income ✅
+
+- `f1nance/fixed_income/` engine, stdlib-only (no numpy, no Hermes):
+  - `curves` — discount factors, spot/forward rates, present value (flat +
+    interpolated curve), and par→spot bootstrapping (annual-coupon par bonds
+    at consecutive integer tenors). Inverted curves are reported, not
+    "fixed"; interpolation raises outside the curve rather than extrapolating.
+  - `bonds` — clean-price bond pricing, yield-to-maturity (bisection),
+    Macaulay/modified duration, convexity, DV01 — closed-form, no
+    finite-difference approximation.
+- Every metric raises on degenerate input (a rate that implies a non-positive
+  discount factor, non-increasing tenors, non-integer period counts,
+  non-positive price, out-of-range interpolation) rather than fabricating.
+- `fixed-income` skill (v0.1.0) fronting the engine; the standalone agent
+  gained four fixed-income tools (`fixedincome_price`, `fixedincome_ytm`,
+  `fixedincome_risk`, `fixedincome_curve`) — 22 tools total.
+- 41 offline unit tests added (370 total, all green); `price`/`ytm`/
+  `duration`/`pv`/`pv_curve`/`forward`/`bootstrap` CLI with JSON output.
+
 ## Principles that survive every phase
 
 - Honesty over confidence. Risk over return. Verified over elegant.

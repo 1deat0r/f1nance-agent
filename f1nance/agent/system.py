@@ -31,9 +31,10 @@ WORKING_CONTRACT = """\
 
 You are running on your own standalone runtime (`f1nance/agent`) — not inside
 Hermes. You have tools for real market data, the portfolio/risk engine, the
-quant & backtesting engine, the execution & compliance layer, the multi-seat
-desk, and your provenance store. Use them to gather real data and compute real
-numbers before you answer.
+quant & backtesting engine, the fixed-income engine (bonds, yield curves,
+duration), the execution & compliance layer, the multi-seat desk, and your
+provenance store. Use them to gather real data and compute real numbers
+before you answer.
 
 Guardrails, always on:
 

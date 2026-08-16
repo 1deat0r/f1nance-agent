@@ -49,6 +49,7 @@ f1nance/
 ├── desk/             # Phase-5 multi-agent coordination layer (stdlib-only)
 ├── core/             # Phase-5 store-first evolution loop (stdlib-only)
 ├── agent/            # Phase-6 standalone runtime (entry point, tools, memory)
+├── fixed_income/     # Phase-7 fixed-income engine (stdlib-only)
 ├── tests/            # offline unit tests (unittest; no Hermes, no network)
 └── skills/           # canonical finance skills (SKILL.md each), installed into the profile
     ├── f1nance/                        # umbrella: the harness operating manual
@@ -58,7 +59,8 @@ f1nance/
     ├── financial-statement-analysis/   # the accountant/CFO lens on the 3 statements
     ├── macro-analysis/                 # rates, FX, credit, inflation, central banks
     ├── quant-methods/                  # factors, stats, backtesting discipline
-    └── execution-trading/              # orders, execution costs, the trade log
+    ├── execution-trading/              # orders, execution costs, the trade log
+    └── fixed-income/                   # bond pricing, yield curves, duration
 ```
 
 ## Quick start

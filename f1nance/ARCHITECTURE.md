@@ -45,6 +45,7 @@ domain, not to a persona.
 | Reports, memos, decks, models | pdf/docx/xlsx/powerpoint skills | python-pptx, openpyxl, reportlab |
 | Numbers in → tables out | xlsx/csv skills | openpyxl / csv |
 | Orders, execution costs, trade log | `execution-trading` skill | `f1nance/execution` engine (stdlib) |
+| Bond pricing, yield curves, duration | `fixed-income` skill | `f1nance/fixed_income` engine (stdlib) |
 
 ## The guardrail layer (cross-cutting, always on)
 
@@ -77,7 +78,7 @@ every task, in every domain:
 | `macro-analysis` | Markets & Trading, Advisory | ✅ v0.01 |
 | `quant-methods` | Quantitative, Asset Mgmt | ✅ v0.2.0 |
 | `m-and-a` (deal process & structuring) | IB | 🗓️ roadmap |
-| `fixed-income` (bonds, yield curves, credit) | Markets & Trading | 🗓️ roadmap |
+| `fixed-income` (bonds, yield curves, credit) | Markets & Trading, Quant, Asset Mgmt | ✅ v0.1.0 |
 | `derivatives` (options pricing, greeks, hedging) | Quant, Trading | 🗓️ roadmap |
 | `risk-management` (VaR, stress, limits) | All | 🗓️ roadmap |
 | `execution-trading` (orders, costs, trade log) | Trading, all | ✅ v0.1.0 |

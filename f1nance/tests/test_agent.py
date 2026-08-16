@@ -215,10 +215,14 @@ class RegistryTest(_TempStore):
         self.assertIn("market_price", names)
         self.assertIn("portfolio_value", names)
         self.assertIn("quant_capm", names)
+        self.assertIn("fixedincome_price", names)
+        self.assertIn("fixedincome_ytm", names)
+        self.assertIn("fixedincome_risk", names)
+        self.assertIn("fixedincome_curve", names)
         self.assertIn("execution_order", names)
         self.assertIn("desk_run", names)
         self.assertIn("memory_record", names)
-        self.assertEqual(len(names), 18)
+        self.assertEqual(len(names), 22)
 
     def test_schemas_are_well_formed(self):
         for schema in self._registry().schemas():

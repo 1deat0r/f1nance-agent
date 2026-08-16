@@ -46,6 +46,16 @@ from ..portfolio.risk import (
     sortino_ratio,
     var_historical,
 )
+from ..fixed_income import (
+    bond_price,
+    bootstrap_spot_curve,
+    duration_and_convexity,
+    forward_rate,
+    interpolate_spot,
+    pv,
+    pv_curve,
+    ytm,
+)
 from ..quant.backtest import backtest_weights, walk_forward
 from ..quant.factors import capm, momentum_predictor, multi_factor
 from .paths import default_store_path
@@ -380,6 +390,104 @@ def h_execution_impact(args: dict) -> str:
     )
 
 
+# -- fixed income ------------------------------------------------------------
+
+def h_fixedincome_price(args: dict) -> str:
+    return _json(
+        {
+            "price": bond_price(
+                float(args.get("coupon_rate", 0.0)),
+                float(args["maturity_years"]),
+                float(args["ytm"]),
+                face=float(args.get("face", 100.0)),
+                payments_per_year=int(args.get("payments_per_year", 2)),
+            )
+        }
+    )
+
+
+def h_fixedincome_ytm(args: dict) -> str:
+    return _json(
+        {
+            "ytm": ytm(
+                float(args["price"]),
+                float(args.get("coupon_rate", 0.0)),
+                float(args["maturity_years"]),
+                face=float(args.get("face", 100.0)),
+                payments_per_year=int(args.get("payments_per_year", 2)),
+            )
+        }
+    )
+
+
+def h_fixedincome_risk(args: dict) -> str:
+    return _json(
+        asdict(
+            duration_and_convexity(
+                float(args.get("coupon_rate", 0.0)),
+                float(args["maturity_years"]),
+                float(args["ytm"]),
+                face=float(args.get("face", 100.0)),
+                payments_per_year=int(args.get("payments_per_year", 2)),
+            )
+        )
+    )
+
+
+def h_fixedincome_curve(args: dict) -> str:
+    spec = args["spec"]
+    if "par_tenors" in spec:
+        tenors, spots = bootstrap_spot_curve(
+            [float(t) for t in spec["par_tenors"]],
+            [float(y) for y in spec["par_yields"]],
+        )
+        return _json({"tenors": tenors, "spots": spots})
+    if "rate_t1" in spec:
+        return _json(
+            {
+                "forward_rate": forward_rate(
+                    float(spec["rate_t1"]),
+                    float(spec["rate_t2"]),
+                    float(spec["t1"]),
+                    float(spec["t2"]),
+                    compounding=spec.get("compounding", 2),
+                )
+            }
+        )
+    if "cashflows" in spec:
+        cfs = [float(c) for c in spec["cashflows"]]
+        ts = [float(t) for t in spec["times"]]
+        if "tenors" in spec:
+            return _json(
+                {
+                    "pv": pv_curve(
+                        cfs,
+                        ts,
+                        [float(t) for t in spec["tenors"]],
+                        [float(s) for s in spec["spots"]],
+                        compounding=spec.get("compounding", 2),
+                    )
+                }
+            )
+        return _json(
+            {"pv": pv(cfs, ts, float(spec["rate"]), compounding=spec.get("compounding", 2))}
+        )
+    if "tenors" in spec and "t" in spec:
+        return _json(
+            {
+                "spot": interpolate_spot(
+                    [float(t) for t in spec["tenors"]],
+                    [float(s) for s in spec["spots"]],
+                    float(spec["t"]),
+                )
+            }
+        )
+    raise ValueError(
+        "curve spec needs par_tenors/par_yields, rate_t1/rate_t2, "
+        "tenors/spots/t, or cashflows/times"
+    )
+
+
 # -- the registry ------------------------------------------------------------
 
 @dataclass(frozen=True)
@@ -654,6 +762,66 @@ def build_registry(
                 },
             ),
             h_quant_momentum,
+        ),
+        # fixed income
+        Tool(
+            "fixedincome_price",
+            "Clean price of a bond given coupon, maturity, and yield "
+            "(semiannual by default).",
+            _scalar_params(
+                ["maturity_years", "ytm"],
+                {
+                    "coupon_rate": {"type": "number", "description": "Annualized, e.g. 0.05"},
+                    "maturity_years": {"type": "number", "description": "Years to maturity"},
+                    "ytm": {"type": "number", "description": "Annualized yield-to-maturity"},
+                    "face": {"type": "number", "description": "Par/face value (default 100)"},
+                    "payments_per_year": {"type": "integer", "description": "Default 2"},
+                },
+            ),
+            h_fixedincome_price,
+        ),
+        Tool(
+            "fixedincome_ytm",
+            "Solve yield-to-maturity from a bond's clean price.",
+            _scalar_params(
+                ["price", "maturity_years"],
+                {
+                    "price": {"type": "number", "description": "Clean price"},
+                    "coupon_rate": {"type": "number", "description": "Annualized, e.g. 0.05"},
+                    "maturity_years": {"type": "number"},
+                    "face": {"type": "number"},
+                    "payments_per_year": {"type": "integer"},
+                },
+            ),
+            h_fixedincome_ytm,
+        ),
+        Tool(
+            "fixedincome_risk",
+            "Macaulay/modified duration, convexity, and DV01 for a bond.",
+            _scalar_params(
+                ["maturity_years", "ytm"],
+                {
+                    "coupon_rate": {"type": "number"},
+                    "maturity_years": {"type": "number"},
+                    "ytm": {"type": "number"},
+                    "face": {"type": "number"},
+                    "payments_per_year": {"type": "integer"},
+                },
+            ),
+            h_fixedincome_risk,
+        ),
+        Tool(
+            "fixedincome_curve",
+            "Yield-curve ops: bootstrap par->spot {par_tenors, par_yields}, "
+            "interpolate a spot {tenors, spots, t}, implied forward "
+            "{rate_t1, rate_t2, t1, t2}, or discount cash flows "
+            "{cashflows, times, [rate | tenors+spots]}.",
+            _spec_param(
+                "Curve spec: one of {par_tenors, par_yields}, {rate_t1, rate_t2, t1, t2}, "
+                "{tenors, spots, t}, or {cashflows, times, rate|tenors+spots}; "
+                "optional compounding (periods/year or 'continuous')."
+            ),
+            h_fixedincome_curve,
         ),
         # execution & compliance
         Tool(
