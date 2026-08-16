@@ -35,7 +35,8 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
 ## Current state (verified this session)
 
 - **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅, Phase 5 ✅,
-  Phase 6 ✅, Phase 7 ✅, Phase 8 ✅.** Phase 6 shipped the `f1nance/agent/`
+  Phase 6 ✅, Phase 7 ✅, Phase 8 ✅, Phase 9 ✅.** Phase 6 shipped the
+  `f1nance/agent/`
   standalone runtime (see `f1nance/agent/README.md`): stdlib-only, no Hermes
   imports —
   - `client` — `AgentClient`, an OpenAI-compatible chat-completions client
@@ -50,9 +51,9 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
     rather than inventing.
   - `__main__` — entry point: interactive REPL, `chat -q "…"`, `--list-tools`,
     `--system`.
-- **404 offline unit tests** (`f1nance/tests/`; 329 pre-Phase-7 + 41 in
-  `test_fixed_income.py` + 34 new in `test_derivatives.py` / `test_agent.py`),
-  all green:
+- **438 offline unit tests** (`f1nance/tests/`; 404 pre-Phase-9 + 29 in
+  `test_risk_management.py` + 5 risk-management tool tests in
+  `test_agent.py`), all green:
   `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
 - **Phase 7 — fixed-income engine** (`f1nance/fixed_income/`), stdlib-only,
   raise-on-degenerate, never fabricates:
@@ -82,6 +83,23 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   (`derivatives_price`, `derivatives_greeks`, `derivatives_implied_vol`,
   `derivatives_binomial`) → 26 total. CLI: `price`/`greeks`/`implied_vol`/
   `binomial`.
+- **Phase 9 — risk-management engine** (`f1nance/risk_management/`),
+  stdlib-only, raise-on-degenerate, never fabricates:
+  - `limits` — named risk limits (max/min thresholds) checked against current
+    metrics, with breach / headroom / utilization reported; a limit that
+    references a metric the caller did not supply **raises** rather than
+    fabricating a pass.
+  - `stress` — scenario stress testing (linear factor shocks → P&L per
+    scenario, worst contributor named) and reverse stress testing (solve the
+    single-factor shock for a target loss).
+  - `backtest` — VaR backtesting: Kupiec proportion-of-failures +
+    Christoffersen independence / conditional-coverage likelihood-ratio
+    tests, each with a chi-square p-value. An exception is
+    `realized < -var_forecast`.
+  Fronted by the `risk-management` skill (v0.1.0); the agent gained 4 tools
+  (`riskmanagement_limits`, `riskmanagement_stress`,
+  `riskmanagement_reverse_stress`, `riskmanagement_var_backtest`) → 30 total.
+  CLI: `limits`/`stress`/`reverse_stress`/`var_backtest`.
 - **Desk live executor** (Phase 5) live-verified against the real DeepSeek
   endpoint. **Phase-6 agent loop live-verified end-to-end (2026-08-16)** —
   three live checks against the real DeepSeek endpoint, key loaded from the
@@ -121,14 +139,16 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   - `8ff4ae75f` — `docs(f1nance): refresh next steps — profile retirement gated, Phase-7 pointer`
   - `c390d4713` — `feat(f1nance): add Phase-7 fixed-income engine (bonds, yield curves, duration)`
   - `0f24132d4` — `feat(f1nance): add Phase-8 derivatives engine (Black-Scholes, Greeks, binomial)`
+  - `359278c61` — `feat(f1nance): add Phase-9 risk-management engine (limits, stress, VaR backtest)`
 - Upstream `main` moves fast. Re-check `git ls-remote origin HEAD` before
   claiming "latest". Rebases this session: `9c58a78a7` → `d5773bfc3`
   (2026-08-16); re-rebase when upstream advances again, as a separate step
   from feature work.
-- 10 finance skills under `f1nance/skills/`; `market-data`,
+- 11 finance skills under `f1nance/skills/`; `market-data`,
   `portfolio-management`, and `quant-methods` at v0.2.0, `execution-trading`,
-  `fixed-income`, and `derivatives` at v0.1.0. The `desk`, `core`, `agent`,
-  `fixed_income`, and `derivatives` packages are engines/runtime, not skills.
+  `fixed-income`, `derivatives`, and `risk-management` at v0.1.0. The `desk`,
+  `core`, `agent`, `fixed_income`, `derivatives`, and `risk_management`
+  packages are engines/runtime, not skills.
 
 ## Skills (canonical source: `f1nance/skills/`)
 
@@ -139,8 +159,9 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
 backed by the `f1nance/quant` engine), `execution-trading` (v0.1.0 — backed
 by the `f1nance/execution` engine), `fixed-income` (v0.1.0 — backed by the
 `f1nance/fixed_income` engine), `derivatives` (v0.1.0 — backed by the
-`f1nance/derivatives` engine). Roadmap
-additions: `m-and-a`, `risk-management`.
+`f1nance/derivatives` engine), `risk-management` (v0.1.0 — backed by the
+`f1nance/risk_management` engine). Roadmap
+additions: `m-and-a`.
 
 ## Quirks & lessons (save a fresh session the pain)
 
@@ -182,8 +203,9 @@ additions: `m-and-a`, `risk-management`.
 
 1. ✅ **Live-verified the agent loop** (2026-08-16) — see Current state above.
 2. ✅ **Re-rebased onto upstream `main`** (`d5773bfc3`) 2026-08-16; `main ==
-   fork/main`, 404 tests re-green. Re-rebase when upstream advances again, as
-   a separate step from feature work.
+   fork/main`. **Upstream has advanced again** — `git ls-remote origin HEAD`
+   now shows `460d34564` vs our `d5773bfc3`; re-rebase as a separate step
+   from feature work, then re-run the suite.
 3. ✅ **Phase 7 — fixed income** delivered (2026-08-16): `f1nance/fixed_income/`
    engine + `fixed-income` skill (v0.1.0) + 4 agent tools + 41 tests. 1deat0r
    picked fixed-income as the first roadmap skill.
@@ -194,16 +216,19 @@ additions: `m-and-a`, `risk-management`.
    `f1nance/` (it should all be derived from the repo).
 5. ✅ **Phase 8 — derivatives** delivered (2026-08-16): `f1nance/derivatives/`
    engine (Black-Scholes + Greeks + implied vol + binomial lattice) +
-   `derivatives` skill (v0.1.0) + 4 agent tools + 34 tests. Next roadmap
-   pick: **risk-management** (limits, stress tests, VaR backtesting —
-   formalizes the "risk first" guardrail on top of Phase-2 `portfolio/risk`
-   and Phase-8 vega/gamma exposure), then `m-and-a` (overlaps `valuation`).
-   Same pattern: a stdlib-only engine in `f1nance/<domain>/` (CLI + JSON
-   output, `raise` on degenerate input, never fabricate), a fronting
-   SKILL.md, offline unit tests in `f1nance/tests/`, agent tools in
-   `f1nance/agent/tools.py`, and a clean commit. Re-project to the profile
-   (step 6) only while it is still in use.
-6. Re-project repo → profile after editing `f1nance/` skills (see Resume
+   `derivatives` skill (v0.1.0) + 4 agent tools + 34 tests.
+6. ✅ **Phase 9 — risk management** delivered (2026-08-16):
+   `f1nance/risk_management/` engine (limits + stress + VaR backtesting) +
+   `risk-management` skill (v0.1.0) + 4 agent tools + 34 tests. Next roadmap
+   pick: **m-and-a** (deal process & structuring; overlaps `valuation`, which
+   already owns DCF/comps/precedent transactions — m-and-a adds the deal
+   mechanics: accretion/dilution, synergies, LBO). Same pattern: a
+   stdlib-only engine in `f1nance/<domain>/` (CLI + JSON output, `raise` on
+   degenerate input, never fabricate), a fronting SKILL.md, offline unit
+   tests in `f1nance/tests/`, agent tools in `f1nance/agent/tools.py`, and a
+   clean commit. Re-project to the profile (step 7) only while it is still in
+   use.
+7. Re-project repo → profile after editing `f1nance/` skills (see Resume
    commands) — only relevant while the profile is still in use.
 
 ## Resume commands
@@ -213,7 +238,7 @@ additions: `m-and-a`, `risk-management`.
 cd "/home/mustbearn/Projects/AI Agents/F1NANCE Agent"
 f1nance/.venv/bin/python -m f1nance.agent                 # interactive REPL
 f1nance/.venv/bin/python -m f1nance.agent chat -q "value NVDA"   # one-shot (needs key)
-f1nance/.venv/bin/python -m f1nance.agent --list-tools    # dump 22 tool schemas
+f1nance/.venv/bin/python -m f1nance.agent --list-tools    # dump 30 tool schemas
 f1nance/.venv/bin/python -m f1nance.agent --system        # print the system prompt
 
 # bootstrap profile (fallback)
@@ -249,6 +274,12 @@ f1nance/.venv/bin/python -m f1nance.derivatives price spec.json
 f1nance/.venv/bin/python -m f1nance.derivatives greeks spec.json
 f1nance/.venv/bin/python -m f1nance.derivatives implied_vol spec.json
 f1nance/.venv/bin/python -m f1nance.derivatives binomial spec.json
+
+# risk-management engine
+f1nance/.venv/bin/python -m f1nance.risk_management limits spec.json
+f1nance/.venv/bin/python -m f1nance.risk_management stress spec.json
+f1nance/.venv/bin/python -m f1nance.risk_management reverse_stress spec.json
+f1nance/.venv/bin/python -m f1nance.risk_management var_backtest spec.json
 
 # execution & compliance layer
 f1nance/.venv/bin/python -m f1nance.execution order spec.json
