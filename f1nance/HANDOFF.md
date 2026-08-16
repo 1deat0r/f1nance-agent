@@ -153,6 +153,13 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   Fronted by the `deal-memo` skill (v0.1.0); the agent gained one tool
   (`dealmemo_run`) → 35 total. CLI: `memo`. 25 offline unit tests added
   (496 total, all green).
+- **Phase-11 deal memo live-verified end-to-end (2026-08-16)** against the
+  real DeepSeek endpoint — `dealmemo_run` fired through the real loop and
+  returned the hand-computed values: accretion +9.58% (pro-forma EPS $5.479),
+  synergy net +$265.9 (covered), risk limits 80% utilized (no breach), stress
+  −$6,000 vs the $5,000 budget — deriving `adverse`, with the headline loss
+  case (equity −30% loses $6,000, −19.66% of NAV) and the falsification
+  condition (the $100 synergy run-rate within 2 years) named.
 - F1NANCE commits on `main` (pushed; `main == fork/main`). **Rebased onto
   upstream `main` (`460d34564`) on 2026-08-16** — all SHAs below are the
   post-rebase values; the Phase-11 feature commit is `fd616f5e3` (the
@@ -270,11 +277,10 @@ them (valuation → M&A → risk) into one scored verdict.
    there that isn't already in `f1nance/` (it should all be derived from the
    repo).
 4. **Next move is 1deat0r's call.** The hardening/integration candidate
-   (deal-memo pipeline) is now delivered. Further candidates — live
-   end-to-end verification of `dealmemo_run` through the real loop, a
-   deal-process/negotiation layer, a dividend-recap LBO extension, or a
-   fresh upstream re-rebase — are 1deat0r's pick. Do not start a new engine
-   without 1deat0r picking.
+   (deal-memo pipeline) is now delivered and live-verified. Further
+   candidates — a deal-process/negotiation layer, a dividend-recap LBO
+   extension, or a fresh upstream re-rebase — are 1deat0r's pick. Do not
+   start a new engine without 1deat0r picking.
 5. Re-project repo → profile after editing `f1nance/` skills (see Resume
    commands) — only relevant while the profile is still in use.
 
