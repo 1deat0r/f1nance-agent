@@ -231,10 +231,11 @@ class RegistryTest(_TempStore):
         self.assertIn("manda_synergies", names)
         self.assertIn("manda_breakeven", names)
         self.assertIn("manda_lbo", names)
+        self.assertIn("dealmemo_run", names)
         self.assertIn("execution_order", names)
         self.assertIn("desk_run", names)
         self.assertIn("memory_record", names)
-        self.assertEqual(len(names), 34)
+        self.assertEqual(len(names), 35)
 
     def test_schemas_are_well_formed(self):
         for schema in self._registry().schemas():
@@ -517,6 +518,41 @@ class MandAToolTest(_TempStore):
                  "acquirer_share_price": 50, "tax_rate": 0.25},
             )
         )
+        self.assertIn("error", out)
+
+
+class DealMemoToolTest(_TempStore):
+    def test_full_memo(self):
+        out = json.loads(
+            self._registry().dispatch(
+                "dealmemo_run",
+                {"spec": {
+                    "merger": {"acquirer_ni": 500, "acquirer_shares": 100,
+                               "target_ni": 120, "purchase_price": 2000,
+                               "cash_portion": 1000, "stock_portion": 1000,
+                               "acquirer_share_price": 50, "tax_rate": 0.25,
+                               "cost_synergies": 100, "new_debt_rate": 0.05,
+                               "discount_rate": 0.10, "ramp_years": 2,
+                               "premium_paid": 400, "integration_costs": 50},
+                    "risk": {"nav": 30520, "metrics": {"gross_exposure": 1.20},
+                             "limits": [{"name": "gross exposure", "metric": "gross_exposure",
+                                         "threshold": 1.50}],
+                             "exposures": {"equity": 20000.0},
+                             "scenarios": [{"name": "equity -30%", "shocks": {"equity": -0.30}}],
+                             "loss_budget": 5000},
+                }},
+            )
+        )
+        self.assertEqual(out["recommendation"], "adverse")
+        self.assertEqual(len(out["checks"]), 4)
+        verdicts = {c["name"]: c["verdict"] for c in out["checks"]}
+        self.assertEqual(verdicts["accretion"], "pass")
+        self.assertEqual(verdicts["synergy coverage"], "pass")
+        self.assertEqual(verdicts["risk limits"], "pass")
+        self.assertEqual(verdicts["stress budget"], "fail")
+
+    def test_empty_spec_is_honest(self):
+        out = json.loads(self._registry().dispatch("dealmemo_run", {"spec": {}}))
         self.assertIn("error", out)
 
 

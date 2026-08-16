@@ -216,6 +216,27 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
 - 28 offline unit tests added (471 total, all green); `accretion`/`synergies`/
   `breakeven`/`lbo` CLI with JSON output.
 
+## Phase 11 — Deal memo (integration) ✅
+
+- `f1nance/deal_memo/` engine, stdlib-only (no numpy, no Hermes): the
+  integration layer that chains **valuation inputs → M&A → risk** into one
+  scored `DealMemo`. `build_deal_memo(spec)` runs accretion/dilution, synergy
+  value + break-even, an optional LBO, and the risk limits + scenario stress,
+  then derives a `favorable` / `adverse` / `inconclusive` recommendation as a
+  pure function of the scorecard — never hand-waved, never fabricated.
+- The scorecard gates, derived from the numbers: **accretion** (pass if
+  accretive), **synergy coverage** (pass if net synergy value covers premium +
+  integration costs), **sponsor return** (pass if LBO IRR meets `hurdle_irr`),
+  **risk limits** (pass if no breach), **stress budget** (pass if the worst
+  scenario P&L stays within `loss_budget`). A section that cannot be computed
+  is recorded in `not_computed` with the reason; an in-scope `skip` (an LBO
+  without a hurdle, a stress test without a budget) degrades the verdict to
+  `inconclusive` rather than pretending the check passed.
+- `deal-memo` skill (v0.1.0) fronting the engine; the standalone agent gained
+  one tool (`dealmemo_run`) — 35 tools total.
+- 25 offline unit tests added (496 total, all green); `memo` CLI with JSON
+  output.
+
 ## Principles that survive every phase
 
 - Honesty over confidence. Risk over return. Verified over elegant.

@@ -56,6 +56,7 @@ from ..fixed_income import (
     pv_curve,
     ytm,
 )
+from ..deal_memo import build_deal_memo
 from ..derivatives import black_scholes, binomial_price, greeks, implied_volatility
 from ..risk_management import (
     Limit,
@@ -675,6 +676,13 @@ def h_manda_lbo(args: dict) -> str:
     return _json(asdict(result))
 
 
+# -- deal memo ----------------------------------------------------------------
+
+def h_dealmemo_run(args: dict) -> str:
+    memo = build_deal_memo(args["spec"])
+    return _json(asdict(memo))
+
+
 # -- the registry ------------------------------------------------------------
 
 @dataclass(frozen=True)
@@ -1220,6 +1228,30 @@ def build_registry(
                 },
             ),
             h_manda_lbo,
+        ),
+        # deal memo (integration: valuation -> m-and-a -> risk)
+        Tool(
+            "dealmemo_run",
+            "Score a whole deal in one pass: accretion/dilution, synergy value "
+            "+ break-even, an optional LBO, and risk limits + scenario stress, "
+            "returning a recommendation (favorable/adverse/inconclusive) "
+            "derived from the numbers, with named loss cases and a "
+            "falsification condition.",
+            _spec_param(
+                "Deal spec object. Optional 'deal_id' and 'names' "
+                "{acquirer, target}. 'merger' block {acquirer_shares, "
+                "purchase_price, cash_portion, stock_portion, tax_rate, "
+                "discount_rate, ramp_years, premium_paid; optional acquirer_ni, "
+                "target_ni, acquirer_share_price, cost_synergies, "
+                "revenue_synergies, revenue_margin, new_debt_rate, cash_used, "
+                "cash_yield, integration_costs, growth}. Optional 'lbo' block "
+                "{enterprise_value, entry_debt, ebitda_0, ebitda_growth, years, "
+                "fcf_margin, exit_multiple, interest_rate; optional "
+                "existing_net_debt, fees, tax_rate, hurdle_irr}. Optional "
+                "'risk' block {metrics + limits, and/or exposures + scenarios; "
+                "optional nav, loss_budget}. At least one block required."
+            ),
+            h_dealmemo_run,
         ),
         # execution & compliance
         Tool(

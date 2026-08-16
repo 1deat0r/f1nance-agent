@@ -49,6 +49,7 @@ domain, not to a persona.
 | Options pricing, Greeks, implied vol | `derivatives` skill | `f1nance/derivatives` engine (stdlib) |
 | Limits, stress tests, VaR backtesting | `risk-management` skill | `f1nance/risk_management` engine (stdlib) |
 | Merger accretion, synergies, LBO | `m-and-a` skill | `f1nance/m_and_a` engine (stdlib) |
+| Whole-deal scoring (valuation→M&A→risk) | `deal-memo` skill | `f1nance/deal_memo` engine (stdlib) |
 
 ## The guardrail layer (cross-cutting, always on)
 
@@ -81,6 +82,7 @@ every task, in every domain:
 | `macro-analysis` | Markets & Trading, Advisory | ✅ v0.01 |
 | `quant-methods` | Quantitative, Asset Mgmt | ✅ v0.2.0 |
 | `m-and-a` (deal process & structuring) | IB | ✅ v0.1.0 |
+| `deal-memo` (whole-deal scoring) | IB, all | ✅ v0.1.0 |
 | `fixed-income` (bonds, yield curves, credit) | Markets & Trading, Quant, Asset Mgmt | ✅ v0.1.0 |
 | `derivatives` (options pricing, greeks, hedging) | Quant, Trading | ✅ v0.1.0 |
 | `risk-management` (VaR, stress, limits) | All | ✅ v0.1.0 |
