@@ -128,6 +128,17 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   The DeepSeek `tool_calls` wire shape matches `parse_tool_calls`; the loop
   dispatches, feeds results back, and settles. Run:
   `f1nance/.venv/bin/python -m f1nance.agent chat -q "…"`.
+- **Phase-10 M&A tools live-verified end-to-end (2026-08-16)** against the
+  real DeepSeek endpoint (same `.env` key), driving the loop with a visible
+  tool trace — all four `manda_*` tools fired and returned the hand-computed
+  values:
+  - `manda_lbo` → equity check $330M, MOIC 1.60×, IRR 9.85% (correct);
+  - `manda_accretion` → pro-forma EPS $5.354, +7.08% accretive (correct);
+  - `manda_synergies` → gross PV $715.9, net +$265.9, covered (correct);
+  - `manda_breakeven` → $62.86 pre-tax run-rate required (correct).
+  The model also cross-checked the three unprompted (breakeven × tax × PV
+  factor == net value). The working contract was stale — it named only the
+  first five engines — and now names all eight (fixed in `e62cc5b63`).
 - F1NANCE commits on `main` (pushed; `main == fork/main`). **Rebased onto
   upstream `main` (`460d34564`) on 2026-08-16** — all SHAs below are the
   post-rebase values; the Phase-10 feature commit is `07ad69024` (the
@@ -242,12 +253,12 @@ fronting skill; no roadmap additions pending.
    fallback until then — do NOT touch it before 1deat0r says so. Back up the
    projected SOUL/skills first if anything exists there that isn't already in
    `f1nance/` (it should all be derived from the repo).
-5. **Next move is 1deat0r's call.** With the build complete, the candidates
-   are: (a) a live end-to-end run of the full 34-tool agent on a real finance
-   brief (Phase 6 verified only 3 tools), (b) hardening/integration — e.g. a
-   deal-memo pipeline chaining valuation → m-and-a → risk-management, or
-   (c) the profile retirement in step 4. Do not start a new engine without
-   1deat0r picking.
+5. ✅ **Live end-to-end verification of the M&A tools** (2026-08-16) — all
+   four `manda_*` tools fired through the real loop with correct results (see
+   Current state). Remaining candidates for the next move are 1deat0r's call:
+   (b) hardening/integration — e.g. a deal-memo pipeline chaining
+   valuation → m-and-a → risk-management, or (c) the profile retirement in
+   step 4. Do not start a new engine without 1deat0r picking.
 6. Re-project repo → profile after editing `f1nance/` skills (see Resume
    commands) — only relevant while the profile is still in use.
 
