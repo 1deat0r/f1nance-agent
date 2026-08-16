@@ -173,8 +173,13 @@ additions: `m-and-a`, `derivatives`, `risk-management`.
    fallback until then — do NOT touch it before 1deat0r says so. Back up the
    projected SOUL/skills first if anything exists there that isn't already in
    `f1nance/` (it should all be derived from the repo).
-5. **Phase 8 — pick the next roadmap skill with 1deat0r.** Remaining:
-   `m-and-a`, `derivatives`, `risk-management`. Same pattern: a stdlib-only
+5. **Phase 8 — derivatives (pick made, 2026-08-16).** 1deat0r delegated the
+   roadmap pick; recommendation: **derivatives** next — closed-form options
+   pricing (Black-Scholes, binomial) + Greeks + implied-vol solve, reusing the
+   curve/continuous-compounding math from Phase 7. Runner-up:
+   `risk-management` (limits, stress tests, VaR backtesting — formalizes the
+   "risk first" guardrail on top of Phase-2 `portfolio/risk`); `m-and-a` last
+   (overlaps the existing `valuation` skill). Same pattern: a stdlib-only
    engine in `f1nance/<domain>/` (CLI + JSON output, `raise` on degenerate
    input, never fabricate), a fronting SKILL.md, offline unit tests in
    `f1nance/tests/`, agent tools in `f1nance/agent/tools.py`, and a clean
