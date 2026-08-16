@@ -139,9 +139,23 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   The model also cross-checked the three unprompted (breakeven × tax × PV
   factor == net value). The working contract was stale — it named only the
   first five engines — and now names all eight (fixed in `e62cc5b63`).
+- **Phase 11 — deal-memo engine** (`f1nance/deal_memo/`), stdlib-only,
+  raise-on-degenerate, never fabricates — the integration layer that chains
+  valuation → M&A → risk into one scored verdict:
+  - `build_deal_memo(spec)` runs accretion/dilution, synergy value +
+    break-even, an optional LBO, and risk limits + scenario stress, then
+    derives a `favorable` / `adverse` / `inconclusive` recommendation as a
+    pure function of the scorecard (accretion, synergy coverage, sponsor
+    return, risk limits, stress budget). A section that cannot be computed is
+    recorded in `not_computed` with the reason; a `skip` (an LBO without a
+    `hurdle_irr`, a stress test without a `loss_budget`) degrades the verdict
+    to `inconclusive` rather than pretending the check passed.
+  Fronted by the `deal-memo` skill (v0.1.0); the agent gained one tool
+  (`dealmemo_run`) → 35 total. CLI: `memo`. 25 offline unit tests added
+  (496 total, all green).
 - F1NANCE commits on `main` (pushed; `main == fork/main`). **Rebased onto
   upstream `main` (`460d34564`) on 2026-08-16** — all SHAs below are the
-  post-rebase values; the Phase-10 feature commit is `07ad69024` (the
+  post-rebase values; the Phase-11 feature commit is `fd616f5e3` (the
   `docs` commit recording this handoff becomes the new head):
   - `85237a1c8` — `feat(f1nance): found the sovereign financial-agent harness`
   - `64c9481d7` — `docs(f1nance): make the end-state explicit — F1NANCE leaves Hermes…`
@@ -175,15 +189,17 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   - `61ea036c1` — `feat(f1nance): add Phase-9 risk-management engine (limits, stress, VaR backtest)`
   - `713ddf1cd` — `docs(f1nance): record Phase-9 commit hash and state in HANDOFF`
   - `07ad69024` — `feat(f1nance): add Phase-10 M&A engine (accretion/dilution, synergies, LBO)`
+  - `fd616f5e3` — `feat(f1nance): add Phase-11 deal-memo pipeline (valuation -> M&A -> risk, one verdict)`
 - Upstream `main` moves fast. Re-check `git ls-remote origin HEAD` before
   claiming "latest". Rebased this session: `d5773bfc3` → `460d34564`
   (2026-08-16); re-rebase when upstream advances again, as a separate step
   from feature work.
-- 12 finance skills under `f1nance/skills/`; `market-data`,
+- 13 finance skills under `f1nance/skills/`; `market-data`,
   `portfolio-management`, and `quant-methods` at v0.2.0, `execution-trading`,
-  `fixed-income`, `derivatives`, `risk-management`, and `m-and-a` at v0.1.0.
-  The `desk`, `core`, `agent`, `fixed_income`, `derivatives`,
-  `risk_management`, and `m_and_a` packages are engines/runtime, not skills.
+  `fixed-income`, `derivatives`, `risk-management`, `m-and-a`, and `deal-memo`
+  at v0.1.0. The `desk`, `core`, `agent`, `fixed_income`, `derivatives`,
+  `risk_management`, `m_and_a`, and `deal_memo` packages are engines/runtime,
+  not skills.
 
 ## Skills (canonical source: `f1nance/skills/`)
 
@@ -196,8 +212,10 @@ by the `f1nance/execution` engine), `fixed-income` (v0.1.0 — backed by the
 `f1nance/fixed_income` engine), `derivatives` (v0.1.0 — backed by the
 `f1nance/derivatives` engine), `risk-management` (v0.1.0 — backed by the
 `f1nance/risk_management` engine), `m-and-a` (v0.1.0 — backed by the
-`f1nance/m_and_a` engine). All six capability domains now have an engine +
-fronting skill; no roadmap additions pending.
+`f1nance/m_and_a` engine), `deal-memo` (v0.1.0 — backed by the
+`f1nance/deal_memo` integration engine). All six capability domains now have
+an engine + fronting skill, and Phase 11 adds the deal-memo layer that chains
+them (valuation → M&A → risk) into one scored verdict.
 
 ## Quirks & lessons (save a fresh session the pain)
 
@@ -237,29 +255,27 @@ fronting skill; no roadmap additions pending.
 
 ## Next steps (pick up here)
 
-1. ✅ **Phase 10 — M&A** delivered (2026-08-16): `f1nance/m_and_a/` engine
-   (accretion/dilution + synergies/breakeven + LBO) + `m-and-a` skill
-   (v0.1.0) + 4 agent tools (`manda_accretion`/`manda_synergies`/
-   `manda_breakeven`/`manda_lbo`) + 28 engine tests + 5 tool tests.
-2. ✅ **Re-rebased onto upstream `main`** (`460d34564`) 2026-08-16; `main ==
-   fork/main`; suite re-run green (471 tests). Re-check `git ls-remote origin
-   HEAD` before claiming "latest".
-3. ✅ **Phases 7/8/9 — fixed income / derivatives / risk management**
-   delivered (2026-08-16). All six capability domains now have an engine +
-   fronting skill; the phased roadmap build is **complete** (12 skills,
-   8 engines, 34 agent tools).
-4. **Retire the Hermes profile** (`~/.hermes/profiles/f1nance/`) when 1deat0r
-   confirms the standalone runtime is primary. The profile stays a bootstrap
-   fallback until then — do NOT touch it before 1deat0r says so. Back up the
-   projected SOUL/skills first if anything exists there that isn't already in
-   `f1nance/` (it should all be derived from the repo).
-5. ✅ **Live end-to-end verification of the M&A tools** (2026-08-16) — all
-   four `manda_*` tools fired through the real loop with correct results (see
-   Current state). Remaining candidates for the next move are 1deat0r's call:
-   (b) hardening/integration — e.g. a deal-memo pipeline chaining
-   valuation → m-and-a → risk-management, or (c) the profile retirement in
-   step 4. Do not start a new engine without 1deat0r picking.
-6. Re-project repo → profile after editing `f1nance/` skills (see Resume
+1. ✅ **Phase 11 — deal memo (integration)** delivered (2026-08-16):
+   `f1nance/deal_memo/` engine (`build_deal_memo`: accretion + synergy
+   value/break-even + optional LBO + risk limits + stress → one scored
+   verdict) + `deal-memo` skill (v0.1.0) + `dealmemo_run` agent tool
+   (35 total) + 25 tests (496 total, all green).
+2. ✅ **Phases 0–10** delivered and live-verified (see Current state). All six
+   capability domains have an engine + fronting skill; Phase 11 adds the
+   integration layer that chains them.
+3. **Retire the Hermes profile** (`~/.hermes/profiles/f1nance/`) when 1deat0r
+   confirms the standalone runtime is primary — the last remaining gated item.
+   The profile stays a bootstrap fallback until then — do NOT touch it before
+   1deat0r says so. Back up the projected SOUL/skills first if anything exists
+   there that isn't already in `f1nance/` (it should all be derived from the
+   repo).
+4. **Next move is 1deat0r's call.** The hardening/integration candidate
+   (deal-memo pipeline) is now delivered. Further candidates — live
+   end-to-end verification of `dealmemo_run` through the real loop, a
+   deal-process/negotiation layer, a dividend-recap LBO extension, or a
+   fresh upstream re-rebase — are 1deat0r's pick. Do not start a new engine
+   without 1deat0r picking.
+5. Re-project repo → profile after editing `f1nance/` skills (see Resume
    commands) — only relevant while the profile is still in use.
 
 ## Resume commands
@@ -269,7 +285,7 @@ fronting skill; no roadmap additions pending.
 cd "/home/mustbearn/Projects/AI Agents/F1NANCE Agent"
 f1nance/.venv/bin/python -m f1nance.agent                 # interactive REPL
 f1nance/.venv/bin/python -m f1nance.agent chat -q "value NVDA"   # one-shot (needs key)
-f1nance/.venv/bin/python -m f1nance.agent --list-tools    # dump 34 tool schemas
+f1nance/.venv/bin/python -m f1nance.agent --list-tools    # dump 35 tool schemas
 f1nance/.venv/bin/python -m f1nance.agent --system        # print the system prompt
 
 # bootstrap profile (fallback)
@@ -317,6 +333,9 @@ f1nance/.venv/bin/python -m f1nance.m_and_a accretion spec.json
 f1nance/.venv/bin/python -m f1nance.m_and_a synergies spec.json
 f1nance/.venv/bin/python -m f1nance.m_and_a breakeven spec.json
 f1nance/.venv/bin/python -m f1nance.m_and_a lbo spec.json
+
+# deal-memo engine (integration: valuation -> m-and-a -> risk)
+f1nance/.venv/bin/python -m f1nance.deal_memo memo spec.json
 
 # execution & compliance layer
 f1nance/.venv/bin/python -m f1nance.execution order spec.json
