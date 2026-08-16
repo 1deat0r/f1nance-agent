@@ -35,7 +35,7 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
 ## Current state (verified this session)
 
 - **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅, Phase 5 ✅,
-  Phase 6 ✅, Phase 7 ✅, Phase 8 ✅, Phase 9 ✅.** Phase 6 shipped the
+  Phase 6 ✅, Phase 7 ✅, Phase 8 ✅, Phase 9 ✅, Phase 10 ✅.** Phase 6 shipped the
   `f1nance/agent/`
   standalone runtime (see `f1nance/agent/README.md`): stdlib-only, no Hermes
   imports —
@@ -51,9 +51,8 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
     rather than inventing.
   - `__main__` — entry point: interactive REPL, `chat -q "…"`, `--list-tools`,
     `--system`.
-- **438 offline unit tests** (`f1nance/tests/`; 404 pre-Phase-9 + 29 in
-  `test_risk_management.py` + 5 risk-management tool tests in
-  `test_agent.py`), all green:
+- **471 offline unit tests** (`f1nance/tests/`; 438 pre-Phase-10 + 28 in
+  `test_m_and_a.py` + 5 M&A tool tests in `test_agent.py`), all green:
   `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
 - **Phase 7 — fixed-income engine** (`f1nance/fixed_income/`), stdlib-only,
   raise-on-degenerate, never fabricates:
@@ -100,6 +99,24 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   (`riskmanagement_limits`, `riskmanagement_stress`,
   `riskmanagement_reverse_stress`, `riskmanagement_var_backtest`) → 30 total.
   CLI: `limits`/`stress`/`reverse_stress`/`var_backtest`.
+- **Phase 10 — M&A engine** (`f1nance/m_and_a/`), stdlib-only,
+  raise-on-degenerate, never fabricates — the deal-mechanics layer on top of
+  the valuation skill (DCF/comps/precedent transactions):
+  - `accretion_dilution` — the EPS bridge across a cash/stock merger:
+    pro-forma NI (standalone NIs + tax-affected synergies − tax-affected
+    financing cost) over pro-forma shares, as absolute ($/share) and relative
+    (%) accretion. A deal whose cash + stock does not sum to the purchase
+    price **raises** rather than fabricating a bridge.
+  - `synergies` — present-value the run-rate synergies (ramped to full
+    run-rate, then grown in perpetuity at `r > g`), net of one-time
+    integration costs and the premium paid; plus `synergy_breakeven`, the
+    run-rate that exactly covers the premium.
+  - `lbo` — a leveraged buyout: sources & uses (equity check is the balancing
+    plug), a year-by-year debt schedule (FCF repays debt, floored at zero with
+    excess as cash build), the exit, and the sponsor's closed-form MOIC/IRR.
+  Fronted by the `m-and-a` skill (v0.1.0); the agent gained 4 tools
+  (`manda_accretion`, `manda_synergies`, `manda_breakeven`, `manda_lbo`) →
+  34 total. CLI: `accretion`/`synergies`/`breakeven`/`lbo`.
 - **Desk live executor** (Phase 5) live-verified against the real DeepSeek
   endpoint. **Phase-6 agent loop live-verified end-to-end (2026-08-16)** —
   three live checks against the real DeepSeek endpoint, key loaded from the
@@ -112,43 +129,50 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   dispatches, feeds results back, and settles. Run:
   `f1nance/.venv/bin/python -m f1nance.agent chat -q "…"`.
 - F1NANCE commits on `main` (pushed; `main == fork/main`). **Rebased onto
-  upstream `main` (`d5773bfc3`) on 2026-08-16** — all SHAs below are the
-  post-rebase values; new `main` head is `c390d4713` (Phase 7):
-  - `1c66debf8` — `feat(f1nance): found the sovereign financial-agent harness`
-  - `d4ce4fe75` — `docs(f1nance): make the end-state explicit — F1NANCE leaves Hermes…`
-  - `a0ccaa8c7` — `docs(f1nance): add HANDOFF.md for fresh-session pickup`
-  - `4091efdd0` — `feat(f1nance): add Phase-1 data substrate (fetch/cache layer + tests)`
-  - `16756293b` — `docs(f1nance): mark Phase 1 complete; refresh skill/roadmap/handoff`
-  - `2e32fc8d2` — `docs(f1nance): finalize HANDOFF for fresh-session pickup (Phase 2 ready)`
-  - `9e7c699fc` — `feat(f1nance): add Phase-2 portfolio and risk engine`
-  - `0bf6c0be8` — `docs(f1nance): record Phase-2 commit hash in HANDOFF`
-  - `b404f59a2` — `feat(f1nance): add Phase-3 quant and backtesting engine`
-  - `7303d6ad7` — `docs(f1nance): record Phase-3 commit hash and state in HANDOFF`
-  - `e8537e449` — `docs(f1nance): complete the HANDOFF commit lineage`
-  - `a5017c335` — `feat(f1nance): add Phase-4 execution and compliance layer`
-  - `926133e00` — `docs(f1nance): record Phase-4 commit hash and state in HANDOFF`
-  - `5b44708db` — `docs(f1nance): note terminal guard workaround in HANDOFF quirks`
-  - `a9437995b` — `feat(f1nance): add Phase-5 desk (multi-agent) + store-first core`
-  - `4180f3e78` — `docs(f1nance): record Phase-5 commit hash and state in HANDOFF`
-  - `265ae0d45` — `feat(f1nance): add desk live executor (Hermes-free model call) + live CLI`
-  - `463851fc8` — `docs(f1nance): record desk live executor in HANDOFF`
-  - `8ecaef300` — `feat(f1nance): add Phase-6 standalone agent runtime (no Hermes)`
-  - `daca6fb96` — `docs(f1nance): record Phase-6 commit hash and state in HANDOFF`
-  - `73c92afa9` — `docs(f1nance): record live verification of Phase-6 agent loop in HANDOFF`
-  - `11b6d77c1` — `docs(f1nance): record upstream rebase (9c58a78a7) in HANDOFF`
-  - `8ff4ae75f` — `docs(f1nance): refresh next steps — profile retirement gated, Phase-7 pointer`
-  - `c390d4713` — `feat(f1nance): add Phase-7 fixed-income engine (bonds, yield curves, duration)`
-  - `0f24132d4` — `feat(f1nance): add Phase-8 derivatives engine (Black-Scholes, Greeks, binomial)`
-  - `359278c61` — `feat(f1nance): add Phase-9 risk-management engine (limits, stress, VaR backtest)`
+  upstream `main` (`460d34564`) on 2026-08-16** — all SHAs below are the
+  post-rebase values; the Phase-10 feature commit is `07ad69024` (the
+  `docs` commit recording this handoff becomes the new head):
+  - `85237a1c8` — `feat(f1nance): found the sovereign financial-agent harness`
+  - `64c9481d7` — `docs(f1nance): make the end-state explicit — F1NANCE leaves Hermes…`
+  - `1d93c2b5c` — `docs(f1nance): add HANDOFF.md for fresh-session pickup`
+  - `79ceefa1e` — `feat(f1nance): add Phase-1 data substrate (fetch/cache layer + tests)`
+  - `31918a507` — `docs(f1nance): mark Phase 1 complete; refresh market-data skill, roadmap, handoff`
+  - `28df3bf05` — `docs(f1nance): finalize HANDOFF for fresh-session pickup (Phase 2 ready)`
+  - `4153e4bcf` — `feat(f1nance): add Phase-2 portfolio and risk engine`
+  - `75c128b2d` — `docs(f1nance): record Phase-2 commit hash in HANDOFF`
+  - `a01c38432` — `feat(f1nance): add Phase-3 quant and backtesting engine`
+  - `59bd94606` — `docs(f1nance): record Phase-3 commit hash and state in HANDOFF`
+  - `decb32f0c` — `docs(f1nance): complete the HANDOFF commit lineage`
+  - `d752570a6` — `feat(f1nance): add Phase-4 execution and compliance layer`
+  - `c858f87a2` — `docs(f1nance): record Phase-4 commit hash and state in HANDOFF`
+  - `0000d4ee7` — `docs(f1nance): note terminal guard workaround in HANDOFF quirks`
+  - `d5d99d5df` — `feat(f1nance): add Phase-5 desk (multi-agent) + store-first core`
+  - `aff2bfbef` — `docs(f1nance): record Phase-5 commit hash and state in HANDOFF`
+  - `1cb561d11` — `feat(f1nance): add desk live executor (Hermes-free model call) + live CLI`
+  - `19305f0fb` — `docs(f1nance): record desk live executor in HANDOFF`
+  - `7ddda1686` — `feat(f1nance): add Phase-6 standalone agent runtime (no Hermes)`
+  - `e4f67d048` — `docs(f1nance): record Phase-6 commit hash and state in HANDOFF`
+  - `1e37ab92f` — `docs(f1nance): record live verification of Phase-6 agent loop in HANDOFF`
+  - `b3b3207a3` — `docs(f1nance): record upstream rebase (9c58a78a7) in HANDOFF`
+  - `0e012d15b` — `docs(f1nance): refresh next steps — profile retirement gated, Phase-7 pointer`
+  - `1f004d2b5` — `docs(f1nance): record re-rebase onto upstream main (d5773bfc3) in HANDOFF`
+  - `984d41fe4` — `feat(f1nance): add Phase-7 fixed-income engine (bonds, yield curves, duration)`
+  - `bd5f39449` — `docs(f1nance): record Phase-7 commit hash and state in HANDOFF`
+  - `c134eb9cc` — `docs(f1nance): settle Phase-8 pick (derivatives) in HANDOFF kickoff`
+  - `25e2e55ed` — `feat(f1nance): add Phase-8 derivatives engine (Black-Scholes, Greeks, binomial)`
+  - `f7a7e61be` — `docs(f1nance): record Phase-8 commit hash and state in HANDOFF`
+  - `61ea036c1` — `feat(f1nance): add Phase-9 risk-management engine (limits, stress, VaR backtest)`
+  - `713ddf1cd` — `docs(f1nance): record Phase-9 commit hash and state in HANDOFF`
+  - `07ad69024` — `feat(f1nance): add Phase-10 M&A engine (accretion/dilution, synergies, LBO)`
 - Upstream `main` moves fast. Re-check `git ls-remote origin HEAD` before
-  claiming "latest". Rebases this session: `9c58a78a7` → `d5773bfc3`
+  claiming "latest". Rebased this session: `d5773bfc3` → `460d34564`
   (2026-08-16); re-rebase when upstream advances again, as a separate step
   from feature work.
-- 11 finance skills under `f1nance/skills/`; `market-data`,
+- 12 finance skills under `f1nance/skills/`; `market-data`,
   `portfolio-management`, and `quant-methods` at v0.2.0, `execution-trading`,
-  `fixed-income`, `derivatives`, and `risk-management` at v0.1.0. The `desk`,
-  `core`, `agent`, `fixed_income`, `derivatives`, and `risk_management`
-  packages are engines/runtime, not skills.
+  `fixed-income`, `derivatives`, `risk-management`, and `m-and-a` at v0.1.0.
+  The `desk`, `core`, `agent`, `fixed_income`, `derivatives`,
+  `risk_management`, and `m_and_a` packages are engines/runtime, not skills.
 
 ## Skills (canonical source: `f1nance/skills/`)
 
@@ -160,8 +184,9 @@ backed by the `f1nance/quant` engine), `execution-trading` (v0.1.0 — backed
 by the `f1nance/execution` engine), `fixed-income` (v0.1.0 — backed by the
 `f1nance/fixed_income` engine), `derivatives` (v0.1.0 — backed by the
 `f1nance/derivatives` engine), `risk-management` (v0.1.0 — backed by the
-`f1nance/risk_management` engine). Roadmap
-additions: `m-and-a`.
+`f1nance/risk_management` engine), `m-and-a` (v0.1.0 — backed by the
+`f1nance/m_and_a` engine). All six capability domains now have an engine +
+fronting skill; no roadmap additions pending.
 
 ## Quirks & lessons (save a fresh session the pain)
 
@@ -201,34 +226,29 @@ additions: `m-and-a`.
 
 ## Next steps (pick up here)
 
-1. ✅ **Live-verified the agent loop** (2026-08-16) — see Current state above.
-2. ✅ **Re-rebased onto upstream `main`** (`d5773bfc3`) 2026-08-16; `main ==
-   fork/main`. **Upstream has advanced again** — `git ls-remote origin HEAD`
-   now shows `460d34564` vs our `d5773bfc3`; re-rebase as a separate step
-   from feature work, then re-run the suite.
-3. ✅ **Phase 7 — fixed income** delivered (2026-08-16): `f1nance/fixed_income/`
-   engine + `fixed-income` skill (v0.1.0) + 4 agent tools + 41 tests. 1deat0r
-   picked fixed-income as the first roadmap skill.
+1. ✅ **Phase 10 — M&A** delivered (2026-08-16): `f1nance/m_and_a/` engine
+   (accretion/dilution + synergies/breakeven + LBO) + `m-and-a` skill
+   (v0.1.0) + 4 agent tools (`manda_accretion`/`manda_synergies`/
+   `manda_breakeven`/`manda_lbo`) + 28 engine tests + 5 tool tests.
+2. ✅ **Re-rebased onto upstream `main`** (`460d34564`) 2026-08-16; `main ==
+   fork/main`; suite re-run green (471 tests). Re-check `git ls-remote origin
+   HEAD` before claiming "latest".
+3. ✅ **Phases 7/8/9 — fixed income / derivatives / risk management**
+   delivered (2026-08-16). All six capability domains now have an engine +
+   fronting skill; the phased roadmap build is **complete** (12 skills,
+   8 engines, 34 agent tools).
 4. **Retire the Hermes profile** (`~/.hermes/profiles/f1nance/`) when 1deat0r
    confirms the standalone runtime is primary. The profile stays a bootstrap
    fallback until then — do NOT touch it before 1deat0r says so. Back up the
    projected SOUL/skills first if anything exists there that isn't already in
    `f1nance/` (it should all be derived from the repo).
-5. ✅ **Phase 8 — derivatives** delivered (2026-08-16): `f1nance/derivatives/`
-   engine (Black-Scholes + Greeks + implied vol + binomial lattice) +
-   `derivatives` skill (v0.1.0) + 4 agent tools + 34 tests.
-6. ✅ **Phase 9 — risk management** delivered (2026-08-16):
-   `f1nance/risk_management/` engine (limits + stress + VaR backtesting) +
-   `risk-management` skill (v0.1.0) + 4 agent tools + 34 tests. Next roadmap
-   pick: **m-and-a** (deal process & structuring; overlaps `valuation`, which
-   already owns DCF/comps/precedent transactions — m-and-a adds the deal
-   mechanics: accretion/dilution, synergies, LBO). Same pattern: a
-   stdlib-only engine in `f1nance/<domain>/` (CLI + JSON output, `raise` on
-   degenerate input, never fabricate), a fronting SKILL.md, offline unit
-   tests in `f1nance/tests/`, agent tools in `f1nance/agent/tools.py`, and a
-   clean commit. Re-project to the profile (step 7) only while it is still in
-   use.
-7. Re-project repo → profile after editing `f1nance/` skills (see Resume
+5. **Next move is 1deat0r's call.** With the build complete, the candidates
+   are: (a) a live end-to-end run of the full 34-tool agent on a real finance
+   brief (Phase 6 verified only 3 tools), (b) hardening/integration — e.g. a
+   deal-memo pipeline chaining valuation → m-and-a → risk-management, or
+   (c) the profile retirement in step 4. Do not start a new engine without
+   1deat0r picking.
+6. Re-project repo → profile after editing `f1nance/` skills (see Resume
    commands) — only relevant while the profile is still in use.
 
 ## Resume commands
@@ -238,7 +258,7 @@ additions: `m-and-a`.
 cd "/home/mustbearn/Projects/AI Agents/F1NANCE Agent"
 f1nance/.venv/bin/python -m f1nance.agent                 # interactive REPL
 f1nance/.venv/bin/python -m f1nance.agent chat -q "value NVDA"   # one-shot (needs key)
-f1nance/.venv/bin/python -m f1nance.agent --list-tools    # dump 30 tool schemas
+f1nance/.venv/bin/python -m f1nance.agent --list-tools    # dump 34 tool schemas
 f1nance/.venv/bin/python -m f1nance.agent --system        # print the system prompt
 
 # bootstrap profile (fallback)
@@ -280,6 +300,12 @@ f1nance/.venv/bin/python -m f1nance.risk_management limits spec.json
 f1nance/.venv/bin/python -m f1nance.risk_management stress spec.json
 f1nance/.venv/bin/python -m f1nance.risk_management reverse_stress spec.json
 f1nance/.venv/bin/python -m f1nance.risk_management var_backtest spec.json
+
+# m-and-a engine
+f1nance/.venv/bin/python -m f1nance.m_and_a accretion spec.json
+f1nance/.venv/bin/python -m f1nance.m_and_a synergies spec.json
+f1nance/.venv/bin/python -m f1nance.m_and_a breakeven spec.json
+f1nance/.venv/bin/python -m f1nance.m_and_a lbo spec.json
 
 # execution & compliance layer
 f1nance/.venv/bin/python -m f1nance.execution order spec.json
