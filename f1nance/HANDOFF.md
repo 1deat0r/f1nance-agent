@@ -35,13 +35,13 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
 ## Current state (verified this session)
 
 - **Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅, Phase 5 ✅,
-  Phase 6 ✅.** Phase 6 shipped the `f1nance/agent/` standalone runtime (see
-  `f1nance/agent/README.md`): stdlib-only, no Hermes imports —
+  Phase 6 ✅, Phase 7 ✅.** Phase 6 shipped the `f1nance/agent/` standalone
+  runtime (see `f1nance/agent/README.md`): stdlib-only, no Hermes imports —
   - `client` — `AgentClient`, an OpenAI-compatible chat-completions client
     with tool calling over stdlib `urllib` (reuses the desk's `ModelError`
     and DeepSeek defaults; strips `reasoning_content` on echo-back).
-  - `tools` — `Tool`/`ToolRegistry` + 18 engine-backed tools over the six
-    domains plus the provenance store; a failing tool returns an honest
+  - `tools` — `Tool`/`ToolRegistry` + engine-backed tools over the domains
+    plus the provenance store; a failing tool returns an honest
     `{"error": ...}` rather than crashing the loop.
   - `system` — the system-prompt builder (SOUL + active store facts + the
     working contract).
@@ -49,9 +49,22 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
     rather than inventing.
   - `__main__` — entry point: interactive REPL, `chat -q "…"`, `--list-tools`,
     `--system`.
-- **329 offline unit tests** (`f1nance/tests/`; 287 pre-Phase-6 + 42 new in
-  `test_agent.py`), all green:
+- **370 offline unit tests** (`f1nance/tests/`; 329 pre-Phase-7 + 41 new in
+  `test_fixed_income.py`), all green:
   `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
+- **Phase 7 — fixed-income engine** (`f1nance/fixed_income/`), stdlib-only,
+  raise-on-degenerate, never fabricates:
+  - `curves` — discount factors, spot/forward rates, present value (flat +
+    interpolated curve), par→spot bootstrapping (annual-coupon par bonds at
+    consecutive integer tenors). Inverted curves are reported, not "fixed";
+    interpolation raises outside the curve rather than extrapolating.
+  - `bonds` — clean-price bond pricing, yield-to-maturity (bisection),
+    Macaulay/modified duration, convexity, DV01 — closed-form, no
+    finite-difference.
+  Fronted by the `fixed-income` skill (v0.1.0); the agent gained 4 tools
+  (`fixedincome_price`, `fixedincome_ytm`, `fixedincome_risk`,
+  `fixedincome_curve`) → 22 total. CLI: `price`/`ytm`/`duration`/`pv`/
+  `pv_curve`/`forward`/`bootstrap`.
 - **Desk live executor** (Phase 5) live-verified against the real DeepSeek
   endpoint. **Phase-6 agent loop live-verified end-to-end (2026-08-16)** —
   three live checks against the real DeepSeek endpoint, key loaded from the
@@ -65,7 +78,7 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   `f1nance/.venv/bin/python -m f1nance.agent chat -q "…"`.
 - F1NANCE commits on `main` (pushed; `main == fork/main`). **Rebased onto
   upstream `main` (`d5773bfc3`) on 2026-08-16** — all SHAs below are the
-  post-rebase values; new `main` head is `8ff4ae75f`:
+  post-rebase values; new `main` head is `c390d4713` (Phase 7):
   - `1c66debf8` — `feat(f1nance): found the sovereign financial-agent harness`
   - `d4ce4fe75` — `docs(f1nance): make the end-state explicit — F1NANCE leaves Hermes…`
   - `a0ccaa8c7` — `docs(f1nance): add HANDOFF.md for fresh-session pickup`
@@ -89,14 +102,15 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   - `73c92afa9` — `docs(f1nance): record live verification of Phase-6 agent loop in HANDOFF`
   - `11b6d77c1` — `docs(f1nance): record upstream rebase (9c58a78a7) in HANDOFF`
   - `8ff4ae75f` — `docs(f1nance): refresh next steps — profile retirement gated, Phase-7 pointer`
+  - `c390d4713` — `feat(f1nance): add Phase-7 fixed-income engine (bonds, yield curves, duration)`
 - Upstream `main` moves fast. Re-check `git ls-remote origin HEAD` before
   claiming "latest". Rebases this session: `9c58a78a7` → `d5773bfc3`
   (2026-08-16); re-rebase when upstream advances again, as a separate step
   from feature work.
-- 8 finance skills under `f1nance/skills/`; `market-data`,
+- 9 finance skills under `f1nance/skills/`; `market-data`,
   `portfolio-management`, and `quant-methods` at v0.2.0, `execution-trading`
-  at v0.1.0. The `desk`, `core`, and `agent` packages are engines/runtime, not
-  skills.
+  and `fixed-income` at v0.1.0. The `desk`, `core`, `agent`, and
+  `fixed_income` packages are engines/runtime, not skills.
 
 ## Skills (canonical source: `f1nance/skills/`)
 
@@ -105,8 +119,9 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
 `f1nance/portfolio` engine), `valuation`,
 `financial-statement-analysis`, `macro-analysis`, `quant-methods` (v0.2.0 —
 backed by the `f1nance/quant` engine), `execution-trading` (v0.1.0 — backed
-by the `f1nance/execution` engine). Roadmap
-additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`.
+by the `f1nance/execution` engine), `fixed-income` (v0.1.0 — backed by the
+`f1nance/fixed_income` engine). Roadmap
+additions: `m-and-a`, `derivatives`, `risk-management`.
 
 ## Quirks & lessons (save a fresh session the pain)
 
@@ -148,21 +163,23 @@ additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`.
 
 1. ✅ **Live-verified the agent loop** (2026-08-16) — see Current state above.
 2. ✅ **Re-rebased onto upstream `main`** (`d5773bfc3`) 2026-08-16; `main ==
-   fork/main` (`8ff4ae75f`), 329 tests re-green. Re-rebase when upstream
-   advances again, as a separate step from feature work.
-3. **Retire the Hermes profile** (`~/.hermes/profiles/f1nance/`) when 1deat0r
+   fork/main`, 370 tests re-green. Re-rebase when upstream advances again, as
+   a separate step from feature work.
+3. ✅ **Phase 7 — fixed income** delivered (2026-08-16): `f1nance/fixed_income/`
+   engine + `fixed-income` skill (v0.1.0) + 4 agent tools + 41 tests. 1deat0r
+   picked fixed-income as the first roadmap skill.
+4. **Retire the Hermes profile** (`~/.hermes/profiles/f1nance/`) when 1deat0r
    confirms the standalone runtime is primary. The profile stays a bootstrap
    fallback until then — do NOT touch it before 1deat0r says so. Back up the
    projected SOUL/skills first if anything exists there that isn't already in
    `f1nance/` (it should all be derived from the repo).
-4. **Phase 7 — pick a roadmap skill with 1deat0r.** The four roadmap skills
-   (`m-and-a`, `fixed-income`, `derivatives`, `risk-management`) are the
-   natural next capability work. Follow the Phase-1–6 pattern: a stdlib-only
+5. **Phase 8 — pick the next roadmap skill with 1deat0r.** Remaining:
+   `m-and-a`, `derivatives`, `risk-management`. Same pattern: a stdlib-only
    engine in `f1nance/<domain>/` (CLI + JSON output, `raise` on degenerate
    input, never fabricate), a fronting SKILL.md, offline unit tests in
-   `f1nance/tests/`, and a clean commit. Re-project to the profile (step 5)
-   only while the profile is still in use.
-5. Re-project repo → profile after editing `f1nance/` skills (see Resume
+   `f1nance/tests/`, agent tools in `f1nance/agent/tools.py`, and a clean
+   commit. Re-project to the profile (step 6) only while it is still in use.
+6. Re-project repo → profile after editing `f1nance/` skills (see Resume
    commands) — only relevant while the profile is still in use.
 
 ## Resume commands
@@ -172,7 +189,7 @@ additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`.
 cd "/home/mustbearn/Projects/AI Agents/F1NANCE Agent"
 f1nance/.venv/bin/python -m f1nance.agent                 # interactive REPL
 f1nance/.venv/bin/python -m f1nance.agent chat -q "value NVDA"   # one-shot (needs key)
-f1nance/.venv/bin/python -m f1nance.agent --list-tools    # dump 18 tool schemas
+f1nance/.venv/bin/python -m f1nance.agent --list-tools    # dump 22 tool schemas
 f1nance/.venv/bin/python -m f1nance.agent --system        # print the system prompt
 
 # bootstrap profile (fallback)
@@ -193,6 +210,15 @@ f1nance/.venv/bin/python -m f1nance.quant capm spec.json
 f1nance/.venv/bin/python -m f1nance.quant ff spec.json
 f1nance/.venv/bin/python -m f1nance.quant backtest spec.json
 f1nance/.venv/bin/python -m f1nance.quant momentum spec.json
+
+# fixed-income engine
+f1nance/.venv/bin/python -m f1nance.fixed_income price spec.json
+f1nance/.venv/bin/python -m f1nance.fixed_income ytm spec.json
+f1nance/.venv/bin/python -m f1nance.fixed_income duration spec.json
+f1nance/.venv/bin/python -m f1nance.fixed_income pv spec.json
+f1nance/.venv/bin/python -m f1nance.fixed_income pv_curve spec.json
+f1nance/.venv/bin/python -m f1nance.fixed_income forward spec.json
+f1nance/.venv/bin/python -m f1nance.fixed_income bootstrap spec.json
 
 # execution & compliance layer
 f1nance/.venv/bin/python -m f1nance.execution order spec.json
