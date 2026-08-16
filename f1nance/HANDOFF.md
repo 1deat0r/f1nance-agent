@@ -53,10 +53,15 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   `test_agent.py`), all green:
   `f1nance/.venv/bin/python -m unittest discover -s f1nance/tests`.
 - **Desk live executor** (Phase 5) live-verified against the real DeepSeek
-  endpoint. The Phase-6 **agent loop's tool-calling path is offline-verified
-  but not yet run live end-to-end** — it needs `F1NANCE_API_KEY` (or
-  `DEEPSEEK_API_KEY`) in the environment (the key lives in the f1nance
-  profile's `.env`, not the 3v0 shell). Run:
+  endpoint. **Phase-6 agent loop live-verified end-to-end (2026-08-16)** —
+  three live checks against the real DeepSeek endpoint, key loaded from the
+  f1nance profile's `.env` (`DEEPSEEK_API_KEY`):
+  - no-tool call → `"OK"` in ~1.9s (client + key + wire shape);
+  - `portfolio_value` tool call → NAV $30,520 / cash weight 32.77% (correct);
+  - `market_price` tool call → live yfinance fetch, AAPL close $305.93 as of
+    2026-08-14, not cached / not degraded.
+  The DeepSeek `tool_calls` wire shape matches `parse_tool_calls`; the loop
+  dispatches, feeds results back, and settles. Run:
   `f1nance/.venv/bin/python -m f1nance.agent chat -q "…"`.
 - F1NANCE commits on `main` (pushed; `main == fork/main`):
   - `bc552421a` — `feat(f1nance): found the sovereign financial-agent harness`
@@ -129,11 +134,10 @@ additions: `m-and-a`, `fixed-income`, `derivatives`, `risk-management`.
 
 ## Next steps (pick up here)
 
-1. **Live-verify the agent loop** end-to-end (the one unverified path): with
-   the F1NANCE key in the environment, run
-   `f1nance/.venv/bin/python -m f1nance.agent chat -q "value a 60/40 AAPL/TLT portfolio"`.
-   This is the first live exercise of the tool-calling protocol; watch for the
-   DeepSeek `tool_calls` wire shape matching `parse_tool_calls`.
+1. **Live-verify the agent loop** ✅ done (2026-08-16): no-tool call, a pure
+   tool call (`portfolio_value`), and a network tool call (`market_price`) all
+   verified live against the real DeepSeek endpoint — the `tool_calls` wire
+   shape matches `parse_tool_calls`. See Current state above.
 2. **Retire the Hermes profile** when 1deat0r confirms the standalone runtime
    is primary — the profile stays as a bootstrap fallback until then.
 3. Optionally rebase upstream (`git fetch origin && git rebase origin/main`)
