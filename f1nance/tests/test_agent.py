@@ -189,7 +189,8 @@ class AgentClientTest(unittest.TestCase):
 
 class AgentEnvClientTest(unittest.TestCase):
     def test_missing_key_raises(self):
-        with patch.dict(os.environ, {}, clear=True):
+        with patch.dict(os.environ, {}, clear=True), \
+             patch("f1nance.agent.client.load_env", return_value={}):
             with self.assertRaises(ModelError):
                 agent_env_client()
 
@@ -204,6 +205,15 @@ class AgentEnvClientTest(unittest.TestCase):
         self.assertEqual(client.api_key, "d")
         self.assertEqual(client.base_url, "https://api.deepseek.com/v1")
         self.assertEqual(client.model, "deepseek-v4-pro")
+
+    def test_loads_key_from_env_file(self):
+        def fake_load(path=None):
+            os.environ["DEEPSEEK_API_KEY"] = "from_file"
+            return {"DEEPSEEK_API_KEY": "from_file"}
+
+        with patch.dict(os.environ, {}, clear=True), \
+             patch("f1nance.agent.client.load_env", side_effect=fake_load):
+            self.assertEqual(agent_env_client().api_key, "from_file")
 
 
 # -- tools -------------------------------------------------------------------

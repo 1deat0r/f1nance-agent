@@ -43,6 +43,7 @@ from typing import Callable
 from .brief import Brief, Finding
 from .desk import Executor
 from .seats import Seat
+from ..env import load_env
 
 DEFAULT_BASE_URL = "https://api.deepseek.com/v1"
 DEFAULT_MODEL = "deepseek-v4-pro"
@@ -300,6 +301,7 @@ def env_client() -> ModelClient:
     via ``F1NANCE_BASE_URL`` / ``F1NANCE_MODEL``. Raises ``ModelError`` when no
     key is set — the executor will not guess a credential.
     """
+    load_env()  # f1nance/.env (gitignored) supplies the key if not already set
     api_key = os.environ.get("F1NANCE_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
         raise ModelError(

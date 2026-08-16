@@ -110,9 +110,11 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
     answer), bounded by a step cap that raises rather than inventing.
   - `__main__` — the entry point: `python -m f1nance.agent` (interactive
     REPL), `chat -q "…"` (one-shot), `--list-tools`, `--system`.
-- The Hermes profile is now a bootstrap fallback; the body (`f1nance/`) runs
-  on its own via `python -m f1nance.agent`. Retiring the profile entirely is
-  1deat0r's switch to throw, not a code deliverable.
+- The Hermes profile was the bootstrap fallback; the body (`f1nance/`) runs
+  on its own via `python -m f1nance.agent`. The profile was retired on
+  2026-08-16 (removed; backup at
+  `~/.hermes/archive/f1nance-profile-retired-2026-08-16.tar.gz`) — F1NANCE is
+  now fully standalone.
 - Exit criteria met: zero Hermes-only coupling in the native core (only
   docstring mentions — no imports), all six capability domains running on the
   standalone substrate, and 329 offline tests green on both.
@@ -240,6 +242,6 @@ Phased build of the harness. Each phase is a shippable, verifiable increment.
 ## Principles that survive every phase
 
 - Honesty over confidence. Risk over return. Verified over elegant.
-- The repo is the body; the Hermes profile is a temporary projection,
-  discarded on the way out.
+- The repo is the body; the Hermes profile was a temporary projection,
+  discarded on the way out (retired 2026-08-16).
 - Every phase ships with tests and a clean commit, or it does not ship.

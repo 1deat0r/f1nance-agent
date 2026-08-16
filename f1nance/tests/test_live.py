@@ -201,7 +201,8 @@ class ModelExecutorTest(unittest.TestCase):
 
 class EnvClientTest(unittest.TestCase):
     def test_missing_key_raises(self):
-        with patch.dict(os.environ, {}, clear=True):
+        with patch.dict(os.environ, {}, clear=True), \
+             patch("f1nance.desk.live.load_env", return_value={}):
             with self.assertRaises(ModelError):
                 env_client()
 

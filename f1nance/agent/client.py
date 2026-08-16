@@ -34,6 +34,7 @@ from ..desk.live import (
     DEFAULT_TIMEOUT,
     ModelError,
 )
+from ..env import load_env
 
 
 @dataclass(frozen=True)
@@ -173,6 +174,7 @@ def agent_env_client() -> AgentClient:
     via ``F1NANCE_BASE_URL`` / ``F1NANCE_MODEL``. Raises :class:`ModelError`
     when no key is set — the agent will not guess a credential.
     """
+    load_env()  # f1nance/.env (gitignored) supplies the key if not already set
     api_key = os.environ.get("F1NANCE_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
         raise ModelError(

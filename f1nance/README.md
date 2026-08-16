@@ -26,10 +26,11 @@ This is a **hardfork**, not a wrapper:
   skills, roadmap, and — since Phase 6 — the standalone runtime
   (`f1nance/agent/`). This directory is the agent, distinct from the Hermes
   runtime it bootstrapped on.
-- The Hermes runtime (`~/.hermes/hermes-agent`) is the bootstrap chassis.
+- The Hermes runtime (`~/.hermes/hermes-agent`) was the bootstrap chassis.
   F1NANCE ran as a Hermes **profile** (`~/.hermes/profiles/f1nance/`) whose
-  `SOUL.md` and skills are projections of this repo's `f1nance/` directory;
-  since Phase 6 the body runs on its own (`python -m f1nance.agent`).
+  `SOUL.md` and skills were projections of this repo's `f1nance/` directory.
+  The profile was **retired on 2026-08-16** — the body now runs solely on its
+  own runtime (`python -m f1nance.agent`).
 
 ## Layout
 
@@ -53,8 +54,10 @@ f1nance/
 ├── derivatives/      # Phase-8 derivatives engine (Black-Scholes, Greeks, lattice)
 ├── risk_management/  # Phase-9 risk-management engine (limits, stress, VaR backtest)
 ├── m_and_a/          # Phase-10 M&A engine (accretion/dilution, synergies, LBO)
+├── deal_memo/        # Phase-11 deal-memo pipeline (valuation -> M&A -> risk, one verdict)
+├── env.py            # f1nance/.env loader — the runtime owns its own API key
 ├── tests/            # offline unit tests (unittest; no Hermes, no network)
-└── skills/           # canonical finance skills (SKILL.md each), installed into the profile
+└── skills/           # canonical finance skills (SKILL.md each)
     ├── f1nance/                        # umbrella: the harness operating manual
     ├── market-data/                    # where and how to get real market data
     ├── valuation/                      # DCF, comps, precedent transactions
@@ -66,27 +69,15 @@ f1nance/
     ├── fixed-income/                   # bond pricing, yield curves, duration
     ├── derivatives/                    # options pricing, Greeks, implied volatility
     ├── risk-management/                # risk limits, stress tests, VaR backtesting
-    └── m-and-a/                        # merger accretion, synergies, LBO
+    ├── m-and-a/                        # merger accretion, synergies, LBO
+    └── deal-memo/                      # whole-deal scoring: valuation -> M&A -> risk
 ```
 
-## Quick start
+## Standalone (the only interface now)
 
-The runtime profile is created and kept in sync from this repo:
-
-```bash
-# 1. (one-time) create the profile and install the identity + skills
-hermes profile create f1nance --description "Sovereign financial-agent harness"
-cp f1nance/SOUL.md ~/.hermes/profiles/f1nance/SOUL.md
-cp -r f1nance/skills/* ~/.hermes/profiles/f1nance/skills/
-
-# 2. run it
-hermes --profile f1nance          # interactive
-hermes --profile f1nance chat -q "…"   # one-shot
-```
-
-## Standalone (no Hermes) — Phase 6
-
-The body runs on its own substrate — no Hermes, stdlib-only:
+The Hermes bootstrap profile was retired on 2026-08-16 (removed; backup at
+`~/.hermes/archive/f1nance-profile-retired-2026-08-16.tar.gz`). F1NANCE runs
+solely on its own runtime — no Hermes, stdlib-only:
 
 ```bash
 cd "/home/mustbearn/Projects/AI Agents/F1NANCE Agent"
@@ -102,7 +93,8 @@ f1nance/.venv/bin/python -m f1nance.agent --list-tools
 f1nance/.venv/bin/python -m f1nance.agent --system
 ```
 
-Live runs need `F1NANCE_API_KEY` (or `DEEPSEEK_API_KEY`) in the environment.
+Live runs auto-load the key from `f1nance/.env` (gitignored) via `load_env()`;
+override with `F1NANCE_API_KEY`/`DEEPSEEK_API_KEY` or `F1NANCE_ENV=<path>`.
 See `f1nance/agent/README.md`.
 
 ## Staying current with upstream

@@ -93,9 +93,11 @@ every task, in every domain:
 - **`f1nance/` (this repo)** is canonical: the SOUL, the architecture, the
   skills, the roadmap. It is version-controlled and is what makes the fork a
   fork.
-- **`~/.hermes/profiles/f1nance/`** is the projection: the runtime identity
-  (`SOUL.md`) and installed skills that Hermes actually loads. It is derived
-  from `f1nance/`, not the other way around.
+- **`~/.hermes/profiles/f1nance/`** *was* the projection: the runtime identity
+  (`SOUL.md`) and installed skills that Hermes actually loaded. It was retired
+  on 2026-08-16 — removed, with a backup at
+  `~/.hermes/archive/f1nance-profile-retired-2026-08-16.tar.gz`. The repo is
+  the sole body now.
 
 Phase 5 delivered both halves of that move: `f1nance/desk/` (the multi-agent
 coordination layer — five seats, one verdict, executor-injected so the
@@ -114,6 +116,7 @@ reintroducing Hermes coupling.
 **End state — delivered.** F1NANCE is its own agent, separate from Hermes
 Agent: `f1nance/agent/` is the standalone runtime (own entry point, tool
 registry, and memory/decision substrate) with no Hermes dependency. The
-Hermes profile is a bootstrap convenience that is discarded on the way out —
-never a load-bearing dependency. The `f1nance/` core is Hermes-independent by
-design, so the body is portable and the chassis is not mourned.
+Hermes profile was a bootstrap convenience, now discarded (retired
+2026-08-16) — it was never a load-bearing dependency. The `f1nance/` core is
+Hermes-independent by design, so the body is portable and the chassis is not
+mourned.

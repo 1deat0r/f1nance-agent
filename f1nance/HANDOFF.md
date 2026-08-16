@@ -27,10 +27,10 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
     VERSION, skills/, data/ substrate, tests/)
 - **Standalone runtime:** `f1nance/agent/` — own entry point (`python -m
   f1nance.agent`), tool registry, and memory substrate. No Hermes imports.
-- **Runtime profile (bootstrap fallback):** `~/.hermes/profiles/f1nance/`
-  (DeepSeek-v4-pro). Its `SOUL.md` + `skills/` are a **projection of
-  `f1nance/`** — the repo is canonical, the profile is derived. Retiring it is
-  1deat0r's switch to throw now that Phase 6 runs standalone.
+- **Runtime profile: RETIRED (2026-08-16).** `~/.hermes/profiles/f1nance/` was
+  the bootstrap fallback (a projection of `f1nance/`) and has been removed;
+  backup at `~/.hermes/archive/f1nance-profile-retired-2026-08-16.tar.gz`.
+  F1NANCE now runs solely on its own runtime (`f1nance/agent`).
 
 ## Current state (verified this session)
 
@@ -160,6 +160,16 @@ its own. See `SOUL.md` → `## Trajectory`, `ARCHITECTURE.md` → `**End state**
   −$6,000 vs the $5,000 budget — deriving `adverse`, with the headline loss
   case (equity −30% loses $6,000, −19.66% of NAV) and the falsification
   condition (the $100 synergy run-rate within 2 years) named.
+- **Hermes profile retired (2026-08-16).** 1deat0r confirmed; `~/.hermes/
+  profiles/f1nance/` was removed (backup at `~/.hermes/archive/
+  f1nance-profile-retired-2026-08-16.tar.gz`). Durable profile facts not
+  already in the repo were migrated into `f1nance/core/store.json` (the
+  autonomous-action preference, the market-data stack, the key location; the
+  stale "leaves at Phase 6" fact superseded). The live-run key now lives in
+  `f1nance/.env` (gitignored) and the runtime auto-loads it via
+  `f1nance/env.py` (`load_env`); live-verified — `env -u DEEPSEEK_API_KEY
+  f1nance/.venv/bin/python -m f1nance.agent chat -q "Reply with exactly: OK"`
+  → `OK` with the profile gone.
 - F1NANCE commits on `main` (pushed; `main == fork/main`). **Rebased onto
   upstream `main` (`460d34564`) on 2026-08-16** — all SHAs below are the
   post-rebase values; the Phase-11 feature commit is `fd616f5e3` (the
@@ -270,19 +280,16 @@ them (valuation → M&A → risk) into one scored verdict.
 2. ✅ **Phases 0–10** delivered and live-verified (see Current state). All six
    capability domains have an engine + fronting skill; Phase 11 adds the
    integration layer that chains them.
-3. **Retire the Hermes profile** (`~/.hermes/profiles/f1nance/`) when 1deat0r
-   confirms the standalone runtime is primary — the last remaining gated item.
-   The profile stays a bootstrap fallback until then — do NOT touch it before
-   1deat0r says so. Back up the projected SOUL/skills first if anything exists
-   there that isn't already in `f1nance/` (it should all be derived from the
-   repo).
+3. ✅ **Retire the Hermes profile** (`~/.hermes/profiles/f1nance/`) — done
+   2026-08-16: profile removed (backup at `~/.hermes/archive/
+   f1nance-profile-retired-2026-08-16.tar.gz`), durable facts migrated into
+   the repo store, key moved to `f1nance/.env` and auto-loaded by the runtime.
 4. **Next move is 1deat0r's call.** The hardening/integration candidate
-   (deal-memo pipeline) is now delivered and live-verified. Further
-   candidates — a deal-process/negotiation layer, a dividend-recap LBO
-   extension, or a fresh upstream re-rebase — are 1deat0r's pick. Do not
-   start a new engine without 1deat0r picking.
-5. Re-project repo → profile after editing `f1nance/` skills (see Resume
-   commands) — only relevant while the profile is still in use.
+   (deal-memo pipeline) is now delivered and live-verified, and the profile is
+   retired — the phased build and the independence move are **complete**.
+   Further candidates — a deal-process/negotiation layer, a dividend-recap LBO
+   extension, or a fresh upstream re-rebase — are 1deat0r's pick. Do not start
+   a new engine without 1deat0r picking.
 
 ## Resume commands
 
@@ -294,9 +301,9 @@ f1nance/.venv/bin/python -m f1nance.agent chat -q "value NVDA"   # one-shot (nee
 f1nance/.venv/bin/python -m f1nance.agent --list-tools    # dump 35 tool schemas
 f1nance/.venv/bin/python -m f1nance.agent --system        # print the system prompt
 
-# bootstrap profile (fallback)
-hermes -p f1nance                        # interactive
-hermes -p f1nance chat -q "value NVDA"   # one-shot
+# live runs auto-load the key from f1nance/.env (gitignored) via load_env();
+# no profile needed. Override with F1NANCE_API_KEY/DEEPSEEK_API_KEY or
+# F1NANCE_ENV=<path>.
 
 # data substrate
 f1nance/.venv/bin/python -m f1nance.data price AAPL --period 5y
@@ -361,8 +368,4 @@ f1nance/.venv/bin/python -m f1nance.core retract <id>
 f1nance/.venv/bin/python -m f1nance.core export
 f1nance/.venv/bin/python -m f1nance.core history <id>
 f1nance/.venv/bin/python -m f1nance.core render --out STATE.md
-
-# re-project repo → profile after editing f1nance/ skills
-cp f1nance/SOUL.md ~/.hermes/profiles/f1nance/SOUL.md
-cp -r f1nance/skills/* ~/.hermes/profiles/f1nance/skills/finance/
 ```

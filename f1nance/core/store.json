@@ -78,7 +78,7 @@
       "source": "bootstrap",
       "created_at": "2026-08-15T23:11:37Z",
       "supersedes": [],
-      "superseded_by": "",
+      "superseded_by": "f1f5eaa58b42",
       "note": ""
     },
     {
@@ -87,6 +87,48 @@
       "kind": "decision",
       "source": "bootstrap",
       "created_at": "2026-08-15T23:11:37Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "f1f5eaa58b42",
+      "content": "F1NANCE is fully standalone: the Hermes bootstrap profile was retired on 2026-08-16; the body (f1nance/) runs on its own runtime (f1nance/agent) only.",
+      "kind": "memory",
+      "source": "retirement",
+      "created_at": "2026-08-16T03:30:15Z",
+      "supersedes": [
+        "8bc5596238b0"
+      ],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "56285ed0b234",
+      "content": "1deat0r prefers autonomous action over permission-seeking — just do the thing and report.",
+      "kind": "user",
+      "source": "retirement",
+      "created_at": "2026-08-16T03:30:15Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "7145363f025e",
+      "content": "Market-data stack is free sources only: yfinance (equities), FRED fredgraph.csv (macro), SEC EDGAR (filings), stooq (daily fallback), keyless DDG web_search. No broker/execution wiring.",
+      "kind": "memory",
+      "source": "retirement",
+      "created_at": "2026-08-16T03:30:15Z",
+      "supersedes": [],
+      "superseded_by": "",
+      "note": ""
+    },
+    {
+      "id": "385af61146dd",
+      "content": "Live-run API key is DEEPSEEK_API_KEY, loaded by the runtime from f1nance/.env (gitignored); F1NANCE_ENV overrides the file path.",
+      "kind": "memory",
+      "source": "retirement",
+      "created_at": "2026-08-16T03:30:15Z",
       "supersedes": [],
       "superseded_by": "",
       "note": ""
